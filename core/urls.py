@@ -41,8 +41,12 @@ urlpatterns = [
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/', include('users.urls')),  # Additional auth endpoints
 
+    # Characters app URLs (includes utility endpoints)
+    path('', include('characters.urls')),
+
     # API versioning - include all router URLs under v1
     path('v1/', include(router.urls)),
+    path('v1/', include('characters.urls')),
 
     # API root (latest version defaults to v1)
     path('', include(router.urls)),
