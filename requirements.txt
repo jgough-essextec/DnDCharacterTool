@@ -39,3 +39,6 @@ isort==5.13.2
 
 # Data Import
 requests==2.32.3
+
+# API Filtering
+django-filter==24.3
