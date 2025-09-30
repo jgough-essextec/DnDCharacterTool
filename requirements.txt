@@ -1,0 +1,41 @@
+# Core Django
+Django==4.2.16
+djangorestframework==3.14.0
+
+# Database
+psycopg2-binary==2.9.9
+
+# CORS and Authentication
+django-cors-headers==4.3.1
+djangorestframework-simplejwt==5.3.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# AWS Deployment
+zappa==0.59.0
+boto3==1.34.162
+
+# Image Processing
+Pillow==10.4.0
+
+# File Storage (S3)
+django-storages==1.14.4
+
+# Development Dependencies (will move to requirements-dev.txt later)
+django-debug-toolbar==4.2.0
+
+# API Documentation
+drf-spectacular==0.27.2
+
+# Testing
+pytest==8.3.3
+pytest-django==4.9.0
+
+# Code Quality
+black==24.8.0
+flake8==7.1.1
+isort==5.13.2
+
+# Data Import
+requests==2.32.3
