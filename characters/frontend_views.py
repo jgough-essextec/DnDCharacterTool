@@ -19,7 +19,7 @@ from game_content.models import DnDClass, Species, Background, Equipment, Spell,
 # from .services import CharacterCalculationService, CharacterValidationService, RecommendationService
 
 
-class CharacterListView(LoginRequiredMixin, ListView):
+class CharacterListView(ListView):
     """
     Display list of user's characters
     """
