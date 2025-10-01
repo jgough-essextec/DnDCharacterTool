@@ -6,12 +6,30 @@ from rest_framework.routers import DefaultRouter
 
 from . import viewsets
 from . import utility_views
+from . import frontend_views
 
 # Create router and register viewsets
 router = DefaultRouter()
 router.register(r'characters', viewsets.CharacterViewSet, basename='character')
 
-# Utility endpoints
+# Frontend URLs (HTML views)
+frontend_patterns = [
+    # Character list and management
+    path('', frontend_views.CharacterListView.as_view(), name='character_list'),
+    path('create/', frontend_views.character_create_wizard, name='character_create'),
+    path('<int:character_id>/edit/', frontend_views.character_create_wizard, name='character_edit'),
+    path('<int:character_id>/delete/', frontend_views.character_delete, name='character_delete'),
+    path('<int:character_id>/duplicate/', frontend_views.character_duplicate, name='character_duplicate'),
+
+    # Character creation wizard steps
+    path('<int:character_id>/step/<int:step>/', frontend_views.character_create_step, name='character_create_step'),
+    path('<int:character_id>/save-draft/', frontend_views.character_save_draft, name='character_save_draft'),
+
+    # Character sheet view
+    path('<int:character_id>/sheet/', frontend_views.character_sheet_view, name='character_sheet'),
+]
+
+# Utility endpoints (API)
 utility_patterns = [
     # Dice rolling endpoints
     path('dice/roll/', utility_views.roll_dice, name='utility_roll_dice'),
@@ -34,9 +52,10 @@ utility_patterns = [
 ]
 
 urlpatterns = [
-    # Include router URLs
-    path('', include(router.urls)),
+    # Frontend URLs (serve HTML)
+    path('my/', include(frontend_patterns)),
 
-    # Utility endpoints under /utility/
-    path('utility/', include(utility_patterns)),
+    # API endpoints
+    path('api/', include(router.urls)),
+    path('api/utility/', include(utility_patterns)),
 ]

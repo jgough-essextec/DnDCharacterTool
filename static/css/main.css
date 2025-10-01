@@ -1,0 +1,303 @@
+/* D&D Character Creator - Main CSS */
+
+/* Tailwind CSS - using CDN for MVP */
+@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+
+/* Custom CSS Variables for D&D Theme */
+:root {
+  --dnd-primary: #8B0000;      /* Dark Red */
+  --dnd-secondary: #DAA520;     /* Golden Rod */
+  --dnd-accent: #2F4F4F;       /* Dark Slate Gray */
+  --dnd-background: #1a1a1a;   /* Very Dark Gray */
+  --dnd-surface: #2d2d2d;      /* Dark Gray */
+  --dnd-text: #f5f5f5;         /* Off White */
+  --dnd-text-muted: #cccccc;   /* Light Gray */
+  --dnd-border: #444444;       /* Medium Gray */
+  --dnd-success: #228B22;      /* Forest Green */
+  --dnd-warning: #FF8C00;      /* Dark Orange */
+  --dnd-error: #DC143C;        /* Crimson */
+
+  /* Dice Colors */
+  --dice-d4: #4CAF50;
+  --dice-d6: #2196F3;
+  --dice-d8: #FF9800;
+  --dice-d10: #9C27B0;
+  --dice-d12: #F44336;
+  --dice-d20: #FFD700;
+}
+
+/* Base Styles */
+body {
+  background-color: var(--dnd-background);
+  color: var(--dnd-text);
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+/* Custom Components */
+.dnd-card {
+  @apply bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6;
+  background-color: var(--dnd-surface);
+  border-color: var(--dnd-border);
+}
+
+.dnd-button {
+  @apply px-4 py-2 rounded-md font-medium transition-all duration-200 border;
+}
+
+.dnd-button-primary {
+  @apply dnd-button bg-red-800 text-white border-red-700 hover:bg-red-700 focus:ring-2 focus:ring-red-500;
+  background-color: var(--dnd-primary);
+  border-color: var(--dnd-primary);
+}
+
+.dnd-button-secondary {
+  @apply dnd-button bg-yellow-600 text-gray-900 border-yellow-500 hover:bg-yellow-500 focus:ring-2 focus:ring-yellow-400;
+  background-color: var(--dnd-secondary);
+  border-color: var(--dnd-secondary);
+  color: #1a1a1a;
+}
+
+.dnd-button-outline {
+  @apply dnd-button bg-transparent text-gray-300 border-gray-600 hover:bg-gray-700 focus:ring-2 focus:ring-gray-500;
+}
+
+.dnd-button-danger {
+  @apply dnd-button bg-red-600 text-white border-red-500 hover:bg-red-500 focus:ring-2 focus:ring-red-400;
+}
+
+.dnd-input {
+  @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent;
+  background-color: var(--dnd-surface);
+  border-color: var(--dnd-border);
+  color: var(--dnd-text);
+}
+
+.dnd-select {
+  @apply dnd-input;
+}
+
+.dnd-textarea {
+  @apply dnd-input min-h-24 resize-vertical;
+}
+
+/* Class Cards */
+.class-card {
+  @apply dnd-card cursor-pointer transform transition-all duration-200 hover:scale-105 hover:shadow-xl;
+}
+
+.class-card.selected {
+  @apply ring-2 ring-red-500 bg-red-900 bg-opacity-20;
+  border-color: var(--dnd-primary);
+}
+
+.class-card:hover {
+  border-color: var(--dnd-secondary);
+}
+
+/* Species Cards */
+.species-card {
+  @apply class-card;
+}
+
+.species-card.selected {
+  @apply ring-2 ring-yellow-500 bg-yellow-900 bg-opacity-20;
+  border-color: var(--dnd-secondary);
+}
+
+/* Background Cards */
+.background-card {
+  @apply class-card;
+}
+
+.background-card.selected {
+  @apply ring-2 ring-blue-500 bg-blue-900 bg-opacity-20;
+  border-color: #2196F3;
+}
+
+/* Ability Score Components */
+.ability-score-block {
+  @apply dnd-card text-center min-w-20;
+}
+
+.ability-score-value {
+  @apply text-3xl font-bold text-yellow-400;
+  color: var(--dnd-secondary);
+}
+
+.ability-modifier {
+  @apply text-lg text-gray-300;
+  color: var(--dnd-text-muted);
+}
+
+/* Progress Indicator */
+.progress-step {
+  @apply flex items-center justify-center w-10 h-10 rounded-full border-2 font-semibold transition-all duration-200;
+}
+
+.progress-step.completed {
+  @apply bg-green-600 border-green-500 text-white;
+  background-color: var(--dnd-success);
+  border-color: var(--dnd-success);
+}
+
+.progress-step.active {
+  @apply bg-red-800 border-red-600 text-white;
+  background-color: var(--dnd-primary);
+  border-color: var(--dnd-primary);
+}
+
+.progress-step.inactive {
+  @apply bg-gray-700 border-gray-600 text-gray-400;
+}
+
+/* Equipment Slots */
+.equipment-slot {
+  @apply dnd-card p-4 text-center min-h-24 flex flex-col items-center justify-center cursor-pointer transition-all duration-200;
+}
+
+.equipment-slot.filled {
+  @apply bg-green-900 bg-opacity-30 border-green-600;
+}
+
+.equipment-slot.empty {
+  @apply border-dashed border-gray-500 hover:border-gray-400;
+}
+
+/* Spell Components */
+.spell-card {
+  @apply dnd-card p-3 cursor-pointer transition-all duration-200;
+}
+
+.spell-card.selected {
+  @apply ring-2 ring-purple-500 bg-purple-900 bg-opacity-20;
+}
+
+.spell-level-indicator {
+  @apply inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold;
+}
+
+.spell-level-0 { @apply bg-gray-600 text-white; }
+.spell-level-1 { @apply bg-red-600 text-white; }
+.spell-level-2 { @apply bg-orange-600 text-white; }
+.spell-level-3 { @apply bg-yellow-600 text-black; }
+.spell-level-4 { @apply bg-green-600 text-white; }
+.spell-level-5 { @apply bg-blue-600 text-white; }
+
+/* Dice Rolling */
+.dice-result {
+  @apply dnd-card p-4 text-center;
+}
+
+.dice-individual {
+  @apply inline-flex items-center justify-center w-10 h-10 rounded-md text-lg font-bold mx-1;
+}
+
+.dice-d4 { background-color: var(--dice-d4); }
+.dice-d6 { background-color: var(--dice-d6); }
+.dice-d8 { background-color: var(--dice-d8); }
+.dice-d10 { background-color: var(--dice-d10); }
+.dice-d12 { background-color: var(--dice-d12); }
+.dice-d20 { background-color: var(--dice-d20); color: #1a1a1a; }
+
+/* Tooltips */
+.tooltip {
+  @apply absolute z-50 px-3 py-2 text-sm bg-gray-900 text-white rounded-md shadow-lg pointer-events-none;
+  background-color: var(--dnd-background);
+  border: 1px solid var(--dnd-border);
+}
+
+/* Loading States */
+.loading-spinner {
+  @apply inline-block w-6 h-6 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin;
+}
+
+/* Character Sheet */
+.character-sheet-section {
+  @apply dnd-card mb-6;
+}
+
+.character-sheet-header {
+  @apply text-2xl font-bold mb-4 pb-2 border-b border-gray-600;
+  color: var(--dnd-secondary);
+  border-color: var(--dnd-border);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dnd-card {
+    @apply p-4;
+  }
+
+  .class-card:hover {
+    transform: none;
+  }
+
+  .progress-step {
+    @apply w-8 h-8 text-sm;
+  }
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .dnd-card {
+    border: 1px solid #000;
+    background: white;
+    box-shadow: none;
+  }
+
+  .dnd-button {
+    display: none;
+  }
+}
+
+/* Utility Classes */
+.text-dnd-primary { color: var(--dnd-primary); }
+.text-dnd-secondary { color: var(--dnd-secondary); }
+.text-dnd-accent { color: var(--dnd-accent); }
+.text-dnd-muted { color: var(--dnd-text-muted); }
+
+.bg-dnd-surface { background-color: var(--dnd-surface); }
+.border-dnd { border-color: var(--dnd-border); }
+
+/* Animation Classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-in-out;
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dnd-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dnd-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dnd-secondary);
+}

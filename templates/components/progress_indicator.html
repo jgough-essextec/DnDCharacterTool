@@ -1,0 +1,130 @@
+<!-- Character Creation Progress Indicator -->
+<div class="bg-dnd-surface border border-dnd rounded-lg p-4 mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-dnd-secondary">Character Creation Progress</h3>
+        <div class="text-sm text-dnd-muted">
+            Step {{ current_step }} of 6
+        </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="flex items-center justify-between">
+        {% for step in steps %}
+            <div class="flex flex-col items-center">
+                <!-- Step Circle -->
+                <div class="progress-step
+                    {% if step.number < current_step %}completed
+                    {% elif step.number == current_step %}active
+                    {% else %}inactive{% endif %}">
+                    {% if step.number < current_step %}
+                        <!-- Checkmark for completed steps -->
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                    {% else %}
+                        {{ step.number }}
+                    {% endif %}
+                </div>
+
+                <!-- Step Label -->
+                <div class="mt-2 text-center">
+                    <div class="text-xs font-medium text-dnd-text">{{ step.title }}</div>
+                    {% if step.subtitle %}
+                        <div class="text-xs text-dnd-muted mt-1">{{ step.subtitle }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Connection Line (not after last step) -->
+            {% if not forloop.last %}
+                <div class="flex-1 h-px bg-dnd-border mx-2 mt-2"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Overall Progress Bar -->
+    <div class="mt-6">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-dnd-muted">Overall Progress</span>
+            <span class="text-sm font-medium text-dnd-text">{{ progress_percentage }}%</span>
+        </div>
+        <div class="w-full bg-dnd-background rounded-full h-2">
+            <div class="bg-dnd-secondary h-2 rounded-full transition-all duration-300"
+                 style="width: {{ progress_percentage }}%"></div>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons (if in wizard mode) -->
+    {% if show_navigation|default:True %}
+        <div class="flex justify-between mt-6">
+            <button type="button"
+                    class="dnd-button-outline {% if current_step == 1 %}opacity-50 cursor-not-allowed{% endif %}"
+                    {% if current_step > 1 %}
+                        hx-get="{% url 'character_create_step' step=current_step|add:-1 %}"
+                        hx-target="#step-content"
+                        hx-push-url="true"
+                    {% else %}
+                        disabled
+                    {% endif %}>
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Previous
+            </button>
+
+            <div class="flex space-x-2">
+                <button type="button" class="dnd-button-outline" onclick="saveCharacterDraft()">
+                    Save Draft
+                </button>
+
+                {% if current_step < 6 %}
+                    <button type="submit" class="dnd-button-primary">
+                        Continue
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                {% else %}
+                    <button type="submit" class="dnd-button-secondary">
+                        Complete Character
+                        <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for auto-save and navigation -->
+<script>
+    function saveCharacterDraft() {
+        // Show loading state
+        DnDApp.utils.showToast('Saving draft...', 'info');
+
+        // Get character data from current step
+        const formData = new FormData(document.querySelector('#character-form'));
+
+        // Save via API
+        fetch("{% url 'character_save_draft' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                DnDApp.utils.showToast('Draft saved successfully', 'success');
+            } else {
+                DnDApp.utils.showToast('Failed to save draft', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving draft:', error);
+            DnDApp.utils.showToast('Failed to save draft', 'error');
+        });
+    }
+</script>
