@@ -1,0 +1,349 @@
+{% extends 'base/character_wizard.html' %}
+{% load static %}
+
+{% block step_content %}
+<div x-data="classSelection()" class="space-y-8">
+    <!-- Step Header -->
+    <div class="text-center">
+        <h2 class="text-3xl font-bold text-dnd-secondary mb-2">Choose Your Class</h2>
+        <p class="text-dnd-muted max-w-2xl mx-auto">
+            Your class defines your character's primary abilities, role in combat, and available skills.
+            Each class offers unique features and playstyles.
+        </p>
+    </div>
+
+    <!-- Recommendations (for new players) -->
+    {% if show_recommendations %}
+    <div class="dnd-card">
+        <div class="flex items-center mb-4">
+            <svg class="w-6 h-6 text-dnd-secondary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+            <h3 class="text-lg font-semibold text-dnd-secondary">Recommended for Beginners</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center p-4 bg-dnd-background rounded-lg">
+                <div class="text-2xl mb-2">⚔️</div>
+                <h4 class="font-semibold text-dnd-text">Fighter</h4>
+                <p class="text-sm text-dnd-muted">Versatile warrior, easy to play</p>
+            </div>
+            <div class="text-center p-4 bg-dnd-background rounded-lg">
+                <div class="text-2xl mb-2">🛡️</div>
+                <h4 class="font-semibold text-dnd-text">Cleric</h4>
+                <p class="text-sm text-dnd-muted">Healer and support</p>
+            </div>
+            <div class="text-center p-4 bg-dnd-background rounded-lg">
+                <div class="text-2xl mb-2">🗡️</div>
+                <h4 class="font-semibold text-dnd-text">Rogue</h4>
+                <p class="text-sm text-dnd-muted">Stealth and skills expert</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Search and Filter -->
+    <div class="dnd-card">
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-dnd-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text"
+                           x-model="searchQuery"
+                           @input="filterClasses"
+                           placeholder="Search classes..."
+                           class="dnd-input pl-10">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <select x-model="difficultyFilter" @change="filterClasses" class="dnd-select">
+                    <option value="">All Difficulties</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                </select>
+
+                <select x-model="roleFilter" @change="filterClasses" class="dnd-select">
+                    <option value="">All Roles</option>
+                    <option value="Tank">Tank</option>
+                    <option value="Damage">Damage</option>
+                    <option value="Support">Support</option>
+                    <option value="Utility">Utility</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <template x-for="dndClass in filteredClasses" :key="dndClass.id">
+            <div class="class-card"
+                 :class="{ 'selected': selectedClass?.id === dndClass.id }"
+                 @click="selectClass(dndClass)">
+
+                <!-- Class Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-dnd-text" x-text="dndClass.name"></h3>
+                        <p class="text-sm text-dnd-muted" x-text="dndClass.primary_ability + ' based'"></p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl" x-text="getClassIcon(dndClass.name)"></div>
+                        <div class="text-xs text-dnd-muted" x-text="'d' + dndClass.hit_die + ' HP'"></div>
+                    </div>
+                </div>
+
+                <!-- Class Description -->
+                <p class="text-sm text-dnd-muted mb-4 line-clamp-3" x-text="dndClass.description"></p>
+
+                <!-- Class Features -->
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center text-sm">
+                        <span class="font-medium text-dnd-text w-20">Role:</span>
+                        <span class="text-dnd-muted" x-text="getClassRole(dndClass.name)"></span>
+                    </div>
+                    <div class="flex items-center text-sm">
+                        <span class="font-medium text-dnd-text w-20">Difficulty:</span>
+                        <span class="text-dnd-muted" x-text="dndClass.difficulty || 'Intermediate'"></span>
+                    </div>
+                    <div class="flex items-center text-sm" x-show="dndClass.spellcaster">
+                        <span class="font-medium text-dnd-text w-20">Spells:</span>
+                        <span class="text-dnd-secondary text-xs">✨ Spellcaster</span>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-3 gap-2 text-xs border-t border-dnd pt-3">
+                    <div class="text-center">
+                        <div class="text-dnd-muted">Hit Die</div>
+                        <div class="font-medium text-dnd-text" x-text="'d' + dndClass.hit_die"></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-dnd-muted">Skills</div>
+                        <div class="font-medium text-dnd-text" x-text="dndClass.skill_choices + ' choices'"></div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-dnd-muted">Saves</div>
+                        <div class="font-medium text-dnd-text text-xs" x-text="getSavingThrows(dndClass)"></div>
+                    </div>
+                </div>
+
+                <!-- Selection Indicator -->
+                <div x-show="selectedClass?.id === dndClass.id"
+                     class="absolute top-2 right-2 bg-dnd-primary text-white rounded-full p-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- No Results -->
+    <div x-show="filteredClasses.length === 0" class="text-center py-8">
+        <p class="text-dnd-muted">No classes match your search criteria.</p>
+    </div>
+
+    <!-- Selected Class Details -->
+    <div x-show="selectedClass" class="dnd-card" x-transition:enter="fade-in">
+        <h3 class="text-xl font-bold text-dnd-secondary mb-4">
+            <span x-text="selectedClass?.name"></span> Details
+        </h3>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Class Features -->
+            <div>
+                <h4 class="font-semibold text-dnd-text mb-3">Key Features</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex">
+                        <span class="font-medium text-dnd-text w-24">Primary:</span>
+                        <span class="text-dnd-muted" x-text="selectedClass?.primary_ability"></span>
+                    </div>
+                    <div class="flex">
+                        <span class="font-medium text-dnd-text w-24">Hit Points:</span>
+                        <span class="text-dnd-muted" x-text="'d' + selectedClass?.hit_die + ' per level'"></span>
+                    </div>
+                    <div class="flex" x-show="selectedClass?.spellcaster">
+                        <span class="font-medium text-dnd-text w-24">Magic:</span>
+                        <span class="text-dnd-secondary">Full spellcaster</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proficiencies -->
+            <div>
+                <h4 class="font-semibold text-dnd-text mb-3">Proficiencies</h4>
+                <div class="space-y-2 text-sm">
+                    <div>
+                        <span class="font-medium text-dnd-text">Armor:</span>
+                        <span class="text-dnd-muted ml-2" x-text="getArmorProficiencies(selectedClass)"></span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-dnd-text">Weapons:</span>
+                        <span class="text-dnd-muted ml-2" x-text="getWeaponProficiencies(selectedClass)"></span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-dnd-text">Skills:</span>
+                        <span class="text-dnd-muted ml-2" x-text="'Choose ' + selectedClass?.skill_choices + ' from class list'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Class Description -->
+        <div class="mt-6 pt-6 border-t border-dnd">
+            <p class="text-dnd-muted" x-text="selectedClass?.description"></p>
+        </div>
+    </div>
+
+    <!-- Form Input -->
+    <input type="hidden" name="class_id" :value="selectedClass?.id">
+</div>
+
+<script>
+    function classSelection() {
+        return {
+            classes: {{ classes|safe }},
+            selectedClass: {% if selected_class %}{{ selected_class|safe }}{% else %}null{% endif %},
+            searchQuery: '',
+            difficultyFilter: '',
+            roleFilter: '',
+            filteredClasses: [],
+
+            init() {
+                this.filteredClasses = this.classes;
+            },
+
+            selectClass(dndClass) {
+                this.selectedClass = dndClass;
+                // Auto-save selection
+                this.saveSelection();
+            },
+
+            async saveSelection() {
+                if (!this.selectedClass) return;
+
+                try {
+                    await DnDApp.utils.apiRequest(`/characters/api/${DnDApp.characterState.characterId}/`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            dnd_class: this.selectedClass.id
+                        })
+                    });
+                } catch (error) {
+                    console.error('Failed to save class selection:', error);
+                }
+            },
+
+            filterClasses() {
+                let filtered = this.classes;
+
+                // Search filter
+                if (this.searchQuery) {
+                    const query = this.searchQuery.toLowerCase();
+                    filtered = filtered.filter(cls =>
+                        cls.name.toLowerCase().includes(query) ||
+                        cls.description.toLowerCase().includes(query)
+                    );
+                }
+
+                // Difficulty filter
+                if (this.difficultyFilter) {
+                    filtered = filtered.filter(cls => cls.difficulty === this.difficultyFilter);
+                }
+
+                // Role filter
+                if (this.roleFilter) {
+                    filtered = filtered.filter(cls => this.getClassRole(cls.name) === this.roleFilter);
+                }
+
+                this.filteredClasses = filtered;
+            },
+
+            getClassIcon(className) {
+                const icons = {
+                    'Fighter': '⚔️',
+                    'Wizard': '🔮',
+                    'Rogue': '🗡️',
+                    'Cleric': '✨',
+                    'Barbarian': '🪓',
+                    'Bard': '🎵',
+                    'Druid': '🌿',
+                    'Monk': '👊',
+                    'Paladin': '🛡️',
+                    'Ranger': '🏹',
+                    'Sorcerer': '⚡',
+                    'Warlock': '👿'
+                };
+                return icons[className] || '⚡';
+            },
+
+            getClassRole(className) {
+                const roles = {
+                    'Fighter': 'Tank',
+                    'Barbarian': 'Tank',
+                    'Paladin': 'Tank',
+                    'Wizard': 'Damage',
+                    'Sorcerer': 'Damage',
+                    'Warlock': 'Damage',
+                    'Rogue': 'Damage',
+                    'Ranger': 'Damage',
+                    'Cleric': 'Support',
+                    'Bard': 'Support',
+                    'Druid': 'Utility',
+                    'Monk': 'Utility'
+                };
+                return roles[className] || 'Utility';
+            },
+
+            getSavingThrows(dndClass) {
+                if (dndClass.saving_throw_proficiencies) {
+                    return dndClass.saving_throw_proficiencies.join(', ');
+                }
+                return 'Various';
+            },
+
+            getArmorProficiencies(dndClass) {
+                if (dndClass.armor_proficiencies) {
+                    return dndClass.armor_proficiencies.join(', ');
+                }
+                return 'None';
+            },
+
+            getWeaponProficiencies(dndClass) {
+                if (dndClass.weapon_proficiencies) {
+                    return dndClass.weapon_proficiencies.join(', ');
+                }
+                return 'Simple weapons';
+            }
+        }
+    }
+</script>
+{% endblock %}
+
+{% block help_content %}
+<div class="space-y-3">
+    <h4 class="font-semibold text-dnd-secondary">Choosing Your Class</h4>
+    <p>Your class is the most important choice - it determines your character's abilities and role.</p>
+
+    <h5 class="font-medium text-dnd-text">For Beginners:</h5>
+    <ul class="text-xs space-y-1">
+        <li>• <strong>Fighter:</strong> Easy to play, versatile</li>
+        <li>• <strong>Cleric:</strong> Support and healing</li>
+        <li>• <strong>Rogue:</strong> Skills and stealth</li>
+    </ul>
+
+    <h5 class="font-medium text-dnd-text">Key Considerations:</h5>
+    <ul class="text-xs space-y-1">
+        <li>• <strong>Primary Ability:</strong> Your most important stat</li>
+        <li>• <strong>Hit Die:</strong> Higher = more hit points</li>
+        <li>• <strong>Spellcasting:</strong> Magic users vs martial fighters</li>
+    </ul>
+
+    <p class="text-xs text-dnd-muted">You can always change your mind later!</p>
+</div>
+{% endblock %}

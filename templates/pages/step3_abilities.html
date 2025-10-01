@@ -1,0 +1,510 @@
+{% extends 'base/character_wizard.html' %}
+{% load static %}
+
+{% block step_content %}
+<div x-data="abilityScores()" class="space-y-8">
+    <!-- Step Header -->
+    <div class="text-center">
+        <h2 class="text-3xl font-bold text-dnd-secondary mb-2">Determine Ability Scores</h2>
+        <p class="text-dnd-muted max-w-2xl mx-auto">
+            Ability scores determine your character's raw capabilities. Choose how to generate your scores:
+            Standard Array (balanced), Point Buy (customizable), or Rolling (random).
+        </p>
+    </div>
+
+    <!-- Method Selection -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-4">Generation Method</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="method-card"
+                 :class="{ 'selected': method === 'standard_array' }"
+                 @click="setMethod('standard_array')">
+                <div class="text-center">
+                    <div class="text-3xl mb-2">⚖️</div>
+                    <h4 class="font-semibold text-dnd-text">Standard Array</h4>
+                    <p class="text-sm text-dnd-muted mt-1">15, 14, 13, 12, 10, 8</p>
+                    <p class="text-xs text-dnd-muted mt-2">Balanced and reliable</p>
+                </div>
+            </div>
+
+            <div class="method-card"
+                 :class="{ 'selected': method === 'point_buy' }"
+                 @click="setMethod('point_buy')">
+                <div class="text-center">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <h4 class="font-semibold text-dnd-text">Point Buy</h4>
+                    <p class="text-sm text-dnd-muted mt-1">27 points to spend</p>
+                    <p class="text-xs text-dnd-muted mt-2">Full customization</p>
+                </div>
+            </div>
+
+            <div class="method-card"
+                 :class="{ 'selected': method === 'roll' }"
+                 @click="setMethod('roll')">
+                <div class="text-center">
+                    <div class="text-3xl mb-2">🎲</div>
+                    <h4 class="font-semibold text-dnd-text">Roll 4d6</h4>
+                    <p class="text-sm text-dnd-muted mt-1">Drop lowest die</p>
+                    <p class="text-xs text-dnd-muted mt-2">Random and exciting</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ability Priorities (Recommendation) -->
+    {% if ability_priorities %}
+    <div class="dnd-card">
+        <div class="flex items-center mb-4">
+            <svg class="w-5 h-5 text-dnd-secondary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <h3 class="font-semibold text-dnd-secondary">Recommended Priority for {{ character.dnd_class.name }}</h3>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+            {% for ability, priority in ability_priorities.items %}
+            <div class="text-center p-3 bg-dnd-background rounded-lg">
+                <div class="text-sm font-medium text-dnd-text">{{ ability|title }}</div>
+                <div class="text-xs text-dnd-secondary">#{{ priority }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Standard Array Interface -->
+    <div x-show="method === 'standard_array'" x-transition:enter="fade-in" class="space-y-6">
+        <div class="dnd-card">
+            <h3 class="text-lg font-semibold text-dnd-text mb-4">Assign Standard Array</h3>
+            <p class="text-dnd-muted mb-6">Drag and drop or click to assign each score to an ability.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Available Scores -->
+                <div>
+                    <h4 class="font-medium text-dnd-text mb-3">Available Scores</h4>
+                    <div class="grid grid-cols-3 gap-3">
+                        <template x-for="(score, index) in standardArray" :key="index">
+                            <div x-show="!isScoreAssigned(score)"
+                                 @click="assignScore(score)"
+                                 class="ability-score-block cursor-pointer hover:bg-dnd-primary hover:bg-opacity-20 transition-colors">
+                                <div class="ability-score-value" x-text="score"></div>
+                                <div class="ability-modifier text-xs" x-text="formatModifier(abilityModifier(score))"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Ability Assignment -->
+                <div>
+                    <h4 class="font-medium text-dnd-text mb-3">Ability Scores</h4>
+                    <div class="space-y-3">
+                        <template x-for="ability in abilities" :key="ability">
+                            <div class="flex items-center justify-between p-3 bg-dnd-surface rounded-lg">
+                                <div class="flex-1">
+                                    <div class="font-medium text-dnd-text capitalize" x-text="ability"></div>
+                                    <div class="text-xs text-dnd-muted" x-text="getAbilityDescription(ability)"></div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="ability-score-block min-w-16"
+                                         @click="clearAbility(ability)"
+                                         :class="assignedScores[ability] ? 'cursor-pointer' : 'opacity-50'">
+                                        <div class="ability-score-value" x-text="assignedScores[ability] || '--'"></div>
+                                        <div class="ability-modifier text-xs" x-text="assignedScores[ability] ? formatModifier(abilityModifier(assignedScores[ability])) : '+0'"></div>
+                                    </div>
+                                    <div class="text-xs text-dnd-muted w-8" x-text="getPriority(ability)"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Point Buy Interface -->
+    <div x-show="method === 'point_buy'" x-transition:enter="fade-in" class="space-y-6">
+        <div class="dnd-card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-dnd-text">Point Buy System</h3>
+                <div class="text-right">
+                    <div class="text-2xl font-bold" :class="remainingPoints < 0 ? 'text-red-400' : 'text-dnd-secondary'" x-text="remainingPoints"></div>
+                    <div class="text-xs text-dnd-muted">Points Remaining</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <template x-for="ability in abilities" :key="ability">
+                    <div class="bg-dnd-surface p-4 rounded-lg">
+                        <div class="text-center mb-3">
+                            <div class="font-medium text-dnd-text capitalize" x-text="ability"></div>
+                            <div class="text-xs text-dnd-muted" x-text="getAbilityDescription(ability)"></div>
+                        </div>
+
+                        <div class="flex items-center justify-center space-x-3 mb-3">
+                            <button @click="adjustPointBuy(ability, -1)"
+                                    :disabled="pointBuyScores[ability] <= 8"
+                                    class="w-8 h-8 rounded-full bg-dnd-background text-dnd-text hover:bg-dnd-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                -
+                            </button>
+
+                            <div class="ability-score-block min-w-16">
+                                <div class="ability-score-value" x-text="pointBuyScores[ability]"></div>
+                                <div class="ability-modifier text-xs" x-text="formatModifier(abilityModifier(pointBuyScores[ability]))"></div>
+                            </div>
+
+                            <button @click="adjustPointBuy(ability, 1)"
+                                    :disabled="pointBuyScores[ability] >= 15 || !canAffordIncrease(ability)"
+                                    class="w-8 h-8 rounded-full bg-dnd-background text-dnd-text hover:bg-dnd-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                                +
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <div class="text-xs text-dnd-muted">
+                                Cost: <span x-text="getPointCost(pointBuyScores[ability])"></span> pts
+                            </div>
+                            <div class="text-xs text-dnd-muted" x-text="getPriority(ability)"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Point Buy Reference -->
+            <div class="mt-6 pt-4 border-t border-dnd">
+                <h4 class="font-medium text-dnd-text mb-2">Point Costs</h4>
+                <div class="grid grid-cols-8 gap-1 text-xs">
+                    <template x-for="(cost, score) in pointCosts" :key="score">
+                        <div class="text-center p-2 bg-dnd-background rounded">
+                            <div class="font-medium" x-text="score"></div>
+                            <div class="text-dnd-muted" x-text="cost + 'pt'"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rolling Interface -->
+    <div x-show="method === 'roll'" x-transition:enter="fade-in" class="space-y-6">
+        <div class="dnd-card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-dnd-text">Roll for Ability Scores</h3>
+                <button @click="rollAllScores()"
+                        :disabled="isRolling"
+                        class="dnd-button-primary flex items-center">
+                    <svg class="w-5 h-5 mr-2" :class="{ 'animate-spin': isRolling }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span x-text="isRolling ? 'Rolling...' : 'Roll All Scores'"></span>
+                </button>
+            </div>
+
+            <div x-show="rolledScores" class="space-y-4">
+                <!-- Rolled Results -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <template x-for="(scoreData, ability) in rolledScores" :key="ability">
+                        <div class="bg-dnd-surface p-4 rounded-lg">
+                            <div class="text-center mb-3">
+                                <div class="font-medium text-dnd-text capitalize" x-text="ability"></div>
+                                <div class="text-xs text-dnd-muted" x-text="getPriority(ability)"></div>
+                            </div>
+
+                            <div class="text-center mb-3">
+                                <div class="ability-score-block mx-auto">
+                                    <div class="ability-score-value" x-text="scoreData.total"></div>
+                                    <div class="ability-modifier text-xs" x-text="formatModifier(abilityModifier(scoreData.total))"></div>
+                                </div>
+                            </div>
+
+                            <!-- Individual Die Results -->
+                            <div class="flex justify-center space-x-1">
+                                <template x-for="(roll, index) in scoreData.rolls" :key="index">
+                                    <div class="dice-individual dice-d6" x-text="roll"></div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Roll Statistics -->
+                <div x-show="rollStats" class="bg-dnd-background p-4 rounded-lg">
+                    <h4 class="font-medium text-dnd-text mb-2">Roll Summary</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div class="text-center">
+                            <div class="text-dnd-muted">Total</div>
+                            <div class="font-medium text-dnd-text" x-text="rollStats.total"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-dnd-muted">Average</div>
+                            <div class="font-medium text-dnd-text" x-text="rollStats.average"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-dnd-muted">Highest</div>
+                            <div class="font-medium text-dnd-text" x-text="rollStats.highest"></div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-dnd-muted">Lowest</div>
+                            <div class="font-medium text-dnd-text" x-text="rollStats.lowest"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reroll Option -->
+                <div class="text-center">
+                    <button @click="rollAllScores()"
+                            class="dnd-button-outline">
+                        Reroll All Scores
+                    </button>
+                </div>
+            </div>
+
+            <!-- No Rolls Yet -->
+            <div x-show="!rolledScores" class="text-center py-8">
+                <p class="text-dnd-muted mb-4">Click "Roll All Scores" to generate your ability scores using 4d6, drop lowest for each ability.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Final Scores Summary -->
+    <div x-show="hasValidScores()" class="dnd-card" x-transition:enter="fade-in">
+        <h3 class="text-lg font-semibold text-dnd-text mb-4">Final Ability Scores</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <template x-for="ability in abilities" :key="ability">
+                <div class="text-center">
+                    <div class="ability-score-block mx-auto">
+                        <div class="ability-score-value" x-text="getFinalScore(ability)"></div>
+                        <div class="ability-modifier text-xs" x-text="formatModifier(abilityModifier(getFinalScore(ability)))"></div>
+                    </div>
+                    <div class="mt-2 text-sm font-medium text-dnd-text capitalize" x-text="ability"></div>
+                    <div class="text-xs text-dnd-muted" x-text="getPriority(ability)"></div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Hidden Form Inputs -->
+    <div class="hidden">
+        <input type="hidden" name="method" :value="method">
+        <template x-for="ability in abilities" :key="ability">
+            <input type="hidden" :name="ability + '_score'" :value="getFinalScore(ability)">
+        </template>
+    </div>
+</div>
+
+<script>
+    function abilityScores() {
+        return {
+            method: 'standard_array',
+            abilities: ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'],
+            standardArray: [15, 14, 13, 12, 10, 8],
+            assignedScores: {},
+            selectedScore: null,
+            pointBuyScores: {
+                strength: 8, dexterity: 8, constitution: 8,
+                intelligence: 8, wisdom: 8, charisma: 8
+            },
+            pointCosts: { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 },
+            rolledScores: null,
+            rollStats: null,
+            isRolling: false,
+            abilityPriorities: {{ ability_priorities|safe }},
+
+            init() {
+                // Load existing scores if any
+                {% if abilities %}
+                    this.loadExistingScores();
+                {% endif %}
+            },
+
+            loadExistingScores() {
+                // Load from existing character abilities
+                const existing = {{ abilities|safe }};
+                if (existing) {
+                    this.assignedScores = {
+                        strength: existing.strength_score,
+                        dexterity: existing.dexterity_score,
+                        constitution: existing.constitution_score,
+                        intelligence: existing.intelligence_score,
+                        wisdom: existing.wisdom_score,
+                        charisma: existing.charisma_score
+                    };
+                    this.pointBuyScores = { ...this.assignedScores };
+                }
+            },
+
+            setMethod(newMethod) {
+                this.method = newMethod;
+                if (newMethod === 'point_buy') {
+                    this.calculatePointBuyTotal();
+                }
+            },
+
+            // Standard Array Methods
+            assignScore(score) {
+                if (!this.selectedScore) {
+                    this.selectedScore = score;
+                    return;
+                }
+
+                // Find first unassigned ability or swap with selected
+                for (const ability of this.abilities) {
+                    if (!this.assignedScores[ability]) {
+                        this.assignedScores[ability] = score;
+                        this.selectedScore = null;
+                        break;
+                    }
+                }
+            },
+
+            clearAbility(ability) {
+                delete this.assignedScores[ability];
+            },
+
+            isScoreAssigned(score) {
+                return Object.values(this.assignedScores).includes(score);
+            },
+
+            // Point Buy Methods
+            adjustPointBuy(ability, change) {
+                const currentScore = this.pointBuyScores[ability];
+                const newScore = currentScore + change;
+
+                if (newScore < 8 || newScore > 15) return;
+
+                const currentCost = this.pointCosts[currentScore];
+                const newCost = this.pointCosts[newScore];
+                const costChange = newCost - currentCost;
+
+                if (this.pointsUsed + costChange <= 27) {
+                    this.pointBuyScores[ability] = newScore;
+                }
+            },
+
+            canAffordIncrease(ability) {
+                const currentScore = this.pointBuyScores[ability];
+                if (currentScore >= 15) return false;
+
+                const currentCost = this.pointCosts[currentScore];
+                const newCost = this.pointCosts[currentScore + 1];
+                const costChange = newCost - currentCost;
+
+                return this.pointsUsed + costChange <= 27;
+            },
+
+            getPointCost(score) {
+                return this.pointCosts[score] || 0;
+            },
+
+            get pointsUsed() {
+                return Object.values(this.pointBuyScores)
+                    .reduce((total, score) => total + this.getPointCost(score), 0);
+            },
+
+            get remainingPoints() {
+                return 27 - this.pointsUsed;
+            },
+
+            // Rolling Methods
+            async rollAllScores() {
+                this.isRolling = true;
+                try {
+                    const response = await DnDApp.utils.apiRequest('/api/utility/dice/ability-scores/', {
+                        method: 'POST',
+                        body: JSON.stringify({})
+                    });
+
+                    this.rolledScores = response.scores;
+                    this.rollStats = response.statistics;
+
+                    setTimeout(() => {
+                        this.isRolling = false;
+                    }, 1000);
+                } catch (error) {
+                    this.isRolling = false;
+                    DnDApp.utils.showToast('Failed to roll ability scores', 'error');
+                }
+            },
+
+            // Helper Methods
+            getFinalScore(ability) {
+                switch (this.method) {
+                    case 'standard_array':
+                        return this.assignedScores[ability] || 10;
+                    case 'point_buy':
+                        return this.pointBuyScores[ability];
+                    case 'roll':
+                        return this.rolledScores?.[ability]?.total || 10;
+                    default:
+                        return 10;
+                }
+            },
+
+            hasValidScores() {
+                switch (this.method) {
+                    case 'standard_array':
+                        return Object.keys(this.assignedScores).length === 6;
+                    case 'point_buy':
+                        return this.remainingPoints >= 0;
+                    case 'roll':
+                        return this.rolledScores !== null;
+                    default:
+                        return false;
+                }
+            },
+
+            getPriority(ability) {
+                const priority = this.abilityPriorities[ability];
+                return priority ? `#${priority}` : '';
+            },
+
+            getAbilityDescription(ability) {
+                const descriptions = {
+                    strength: 'Physical power',
+                    dexterity: 'Agility & reflexes',
+                    constitution: 'Health & stamina',
+                    intelligence: 'Reasoning ability',
+                    wisdom: 'Awareness & insight',
+                    charisma: 'Force of personality'
+                };
+                return descriptions[ability] || '';
+            },
+
+            abilityModifier(score) {
+                return Math.floor((score - 10) / 2);
+            },
+
+            formatModifier(modifier) {
+                return modifier >= 0 ? `+${modifier}` : `${modifier}`;
+            }
+        }
+    }
+</script>
+{% endblock %}
+
+{% block help_content %}
+<div class="space-y-3">
+    <h4 class="font-semibold text-dnd-secondary">Ability Scores Explained</h4>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">The Six Abilities:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Strength:</strong> Physical power, melee attacks</li>
+            <li>• <strong>Dexterity:</strong> Agility, AC, ranged attacks</li>
+            <li>• <strong>Constitution:</strong> Health, hit points</li>
+            <li>• <strong>Intelligence:</strong> Reasoning, some spells</li>
+            <li>• <strong>Wisdom:</strong> Awareness, some spells</li>
+            <li>• <strong>Charisma:</strong> Personality, some spells</li>
+        </ul>
+    </div>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Generation Methods:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Standard Array:</strong> Reliable, balanced</li>
+            <li>• <strong>Point Buy:</strong> Complete control</li>
+            <li>• <strong>Rolling:</strong> Random, potentially powerful</li>
+        </ul>
+    </div>
+
+    <p class="text-xs text-dnd-muted">Focus on your class's primary ability first, then Constitution for survivability!</p>
+</div>
+{% endblock %}

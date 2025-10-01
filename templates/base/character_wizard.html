@@ -1,0 +1,266 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Character Creation - {{ step_title }} - D&D Character Creator{% endblock %}
+
+{% block main_classes %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-dnd-background">
+    <!-- Wizard Header -->
+    <div class="bg-dnd-surface border-b border-dnd sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Back to Characters -->
+                <a href="{% url 'character_list' %}" class="flex items-center text-dnd-muted hover:text-dnd-secondary transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Back to Characters
+                </a>
+
+                <!-- Character Name -->
+                <div class="text-center">
+                    <h1 class="text-xl font-bold text-dnd-text">{{ character.character_name|default:"New Character" }}</h1>
+                    <p class="text-sm text-dnd-muted">Level {{ character.level }} Character Creation</p>
+                </div>
+
+                <!-- Save & Exit -->
+                <button onclick="saveAndExit()" class="flex items-center text-dnd-muted hover:text-dnd-secondary transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    Save & Exit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Wizard Content -->
+    <div class="container mx-auto px-4 py-8" x-data="characterWizard({{ character.id }})">
+        <!-- Progress Indicator -->
+        {% include 'components/progress_indicator.html' %}
+
+        <!-- Step Content Container -->
+        <div id="step-content" class="fade-in">
+            <form id="character-form" method="post"
+                  hx-post="{% url 'character_create_step' character.id current_step %}"
+                  hx-target="#step-content"
+                  hx-push-url="true"
+                  class="space-y-6"
+                  @submit="$event.preventDefault(); handleFormSubmit($event)">
+
+                {% csrf_token %}
+
+                <!-- Step-specific content will be inserted here -->
+                {% block step_content %}{% endblock %}
+            </form>
+        </div>
+
+        <!-- Help Sidebar (toggleable) -->
+        <div x-data="{ showHelp: false }" class="fixed right-4 top-1/2 transform -translate-y-1/2 z-30">
+            <!-- Help Toggle Button -->
+            <button @click="showHelp = !showHelp"
+                    class="bg-dnd-primary text-white p-3 rounded-l-lg shadow-lg hover:bg-red-700 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </button>
+
+            <!-- Help Panel -->
+            <div x-show="showHelp"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-x-full"
+                 x-transition:enter-end="opacity-1 translate-x-0"
+                 class="absolute right-0 top-0 w-80 bg-dnd-surface border border-dnd rounded-l-lg shadow-xl p-6">
+
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-dnd-secondary">Help & Tips</h3>
+                    <button @click="showHelp = false" class="text-dnd-muted hover:text-dnd-text">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="text-sm text-dnd-text space-y-3">
+                    {% block help_content %}
+                        <p>Welcome to the D&D Character Creator!</p>
+                        <p>Follow the steps to build your character. Each step builds upon the previous one.</p>
+                        <p>Your progress is automatically saved as you work.</p>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dice Roller Modal (Global) -->
+    <div x-data="diceRoller()" x-show="show"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-1"
+         class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+         @click.self="show = false">
+
+        <div class="bg-dnd-surface rounded-lg p-6 max-w-md w-full" @click.stop>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-dnd-secondary">Dice Roller</h3>
+                <button @click="show = false" class="text-dnd-muted hover:text-dnd-text">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-dnd-text mb-2">Dice Notation</label>
+                    <input type="text" x-model="notation" placeholder="e.g., 3d6+2" class="dnd-input">
+                </div>
+
+                <button @click="roll()" :disabled="isRolling"
+                        class="w-full dnd-button-primary flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" :class="{ 'animate-spin': isRolling }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span x-text="isRolling ? 'Rolling...' : 'Roll Dice'"></span>
+                </button>
+
+                <div x-show="result" class="dice-result">
+                    <div class="text-center mb-2">
+                        <div class="text-2xl font-bold text-dnd-secondary" x-text="result?.total"></div>
+                        <div class="text-sm text-dnd-muted" x-text="result?.description"></div>
+                    </div>
+
+                    <div x-show="result?.individual_rolls" class="flex justify-center flex-wrap gap-1">
+                        <template x-for="roll in result?.individual_rolls">
+                            <div class="dice-individual" :class="diceColor" x-text="roll"></div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global functions for wizard navigation
+    function saveAndExit() {
+        // Save current progress
+        if (document.querySelector('#character-form')) {
+            const formData = new FormData(document.querySelector('#character-form'));
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(() => {
+                window.location.href = "{% url 'character_list' %}";
+            });
+        } else {
+            window.location.href = "{% url 'character_list' %}";
+        }
+    }
+
+    // Enhanced character wizard Alpine component
+    function characterWizard(characterId) {
+        return {
+            ...DnDApp.characterState,
+            characterId,
+
+            async handleFormSubmit(event) {
+                const form = event.target;
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    });
+
+                    if (response.ok) {
+                        const html = await response.text();
+
+                        // Update the step content
+                        document.getElementById('step-content').innerHTML = html;
+
+                        // Update browser URL
+                        const url = new URL(response.url);
+                        window.history.pushState({}, '', url.pathname);
+
+                        // Scroll to top
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                        // Show success message
+                        DnDApp.utils.showToast('Progress saved!', 'success');
+
+                    } else {
+                        throw new Error('Form submission failed');
+                    }
+                } catch (error) {
+                    console.error('Form submission error:', error);
+                    DnDApp.utils.showToast('Error saving progress', 'error');
+                }
+            }
+        }
+    }
+
+    // Global dice roller component
+    function diceRoller() {
+        return {
+            show: false,
+            notation: '1d20',
+            result: null,
+            isRolling: false,
+
+            async roll() {
+                if (this.isRolling) return;
+
+                this.isRolling = true;
+                this.result = null;
+
+                try {
+                    const data = await DnDApp.utils.apiRequest('/api/utility/dice/roll/', {
+                        method: 'POST',
+                        body: JSON.stringify({ notation: this.notation })
+                    });
+
+                    this.result = data;
+
+                    setTimeout(() => {
+                        this.isRolling = false;
+                    }, 500);
+                } catch (error) {
+                    this.isRolling = false;
+                    DnDApp.utils.showToast('Dice roll failed', 'error');
+                }
+            },
+
+            get diceColor() {
+                const sides = this.result?.dice_size || 20;
+                const colors = {
+                    4: 'dice-d4',
+                    6: 'dice-d6',
+                    8: 'dice-d8',
+                    10: 'dice-d10',
+                    12: 'dice-d12',
+                    20: 'dice-d20'
+                };
+                return colors[sides] || 'dice-d20';
+            }
+        }
+    }
+
+    // Make dice roller globally available
+    window.showDiceRoller = function() {
+        // Alpine will automatically show the modal via x-data
+        const roller = document.querySelector('[x-data*="diceRoller"]').__x.$data;
+        roller.show = true;
+    }
+</script>
+{% endblock %}

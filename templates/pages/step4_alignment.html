@@ -1,0 +1,362 @@
+{% extends 'base/character_wizard.html' %}
+{% load static %}
+
+{% block step_content %}
+<div x-data="alignmentSelection()" class="space-y-8">
+    <!-- Step Header -->
+    <div class="text-center">
+        <h2 class="text-3xl font-bold text-dnd-secondary mb-2">Choose Your Alignment</h2>
+        <p class="text-dnd-muted max-w-2xl mx-auto">
+            Alignment represents your character's moral and ethical outlook. It's a guide to how your character
+            typically behaves, but you can always act outside your alignment when the situation calls for it.
+        </p>
+    </div>
+
+    <!-- Alignment Information -->
+    <div class="dnd-card">
+        <div class="flex items-center mb-4">
+            <svg class="w-6 h-6 text-dnd-secondary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="text-lg font-semibold text-dnd-secondary">Understanding Alignment</h3>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="font-medium text-dnd-text mb-2">Moral Axis (Good ↔ Evil)</h4>
+                <ul class="text-sm text-dnd-muted space-y-1">
+                    <li>• <strong>Good:</strong> Altruistic, helpful, kind</li>
+                    <li>• <strong>Neutral:</strong> Balanced, pragmatic</li>
+                    <li>• <strong>Evil:</strong> Selfish, harmful, cruel</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-medium text-dnd-text mb-2">Ethical Axis (Law ↔ Chaos)</h4>
+                <ul class="text-sm text-dnd-muted space-y-1">
+                    <li>• <strong>Lawful:</strong> Orderly, reliable, follows rules</li>
+                    <li>• <strong>Neutral:</strong> Flexible, situational</li>
+                    <li>• <strong>Chaotic:</strong> Free-spirited, unpredictable</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Alignment Suggestions -->
+    {% if class_alignment_suggestions %}
+    <div class="dnd-card">
+        <div class="flex items-center mb-4">
+            <svg class="w-5 h-5 text-dnd-secondary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+            <h3 class="font-semibold text-dnd-secondary">Suggested for {{ character.dnd_class.name|default:"Your Class" }}</h3>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            {% for alignment in class_alignment_suggestions %}
+            <button @click="selectAlignment('{{ alignment }}')"
+                    class="px-3 py-1 bg-dnd-secondary bg-opacity-20 text-dnd-secondary rounded-full text-sm hover:bg-opacity-30 transition-colors">
+                {{ alignment }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Alignment Grid -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-6 text-center">Select Your Alignment</h3>
+
+        <div class="alignment-grid">
+            <!-- Column Headers -->
+            <div class="alignment-header"></div>
+            <div class="alignment-header text-center font-medium text-dnd-text">Lawful</div>
+            <div class="alignment-header text-center font-medium text-dnd-text">Neutral</div>
+            <div class="alignment-header text-center font-medium text-dnd-text">Chaotic</div>
+
+            <!-- Good Row -->
+            <div class="alignment-row-header font-medium text-dnd-text">Good</div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Lawful Good' }"
+                 @click="selectAlignment('Lawful Good')">
+                <div class="alignment-name">Lawful Good</div>
+                <div class="alignment-nickname">"Crusader"</div>
+                <div class="alignment-icon">⚖️✨</div>
+            </div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Neutral Good' }"
+                 @click="selectAlignment('Neutral Good')">
+                <div class="alignment-name">Neutral Good</div>
+                <div class="alignment-nickname">"Benefactor"</div>
+                <div class="alignment-icon">🌟</div>
+            </div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Chaotic Good' }"
+                 @click="selectAlignment('Chaotic Good')">
+                <div class="alignment-name">Chaotic Good</div>
+                <div class="alignment-nickname">"Rebel"</div>
+                <div class="alignment-icon">🔥✨</div>
+            </div>
+
+            <!-- Neutral Row -->
+            <div class="alignment-row-header font-medium text-dnd-text">Neutral</div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Lawful Neutral' }"
+                 @click="selectAlignment('Lawful Neutral')">
+                <div class="alignment-name">Lawful Neutral</div>
+                <div class="alignment-nickname">"Judge"</div>
+                <div class="alignment-icon">⚖️</div>
+            </div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'True Neutral' }"
+                 @click="selectAlignment('True Neutral')">
+                <div class="alignment-name">True Neutral</div>
+                <div class="alignment-nickname">"Undecided"</div>
+                <div class="alignment-icon">⚪</div>
+            </div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Chaotic Neutral' }"
+                 @click="selectAlignment('Chaotic Neutral')">
+                <div class="alignment-name">Chaotic Neutral</div>
+                <div class="alignment-nickname">"Free Spirit"</div>
+                <div class="alignment-icon">🌪️</div>
+            </div>
+
+            <!-- Evil Row -->
+            <div class="alignment-row-header font-medium text-dnd-text">Evil</div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Lawful Evil' }"
+                 @click="selectAlignment('Lawful Evil')">
+                <div class="alignment-name">Lawful Evil</div>
+                <div class="alignment-nickname">"Dominator"</div>
+                <div class="alignment-icon">👑💀</div>
+            </div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Neutral Evil' }"
+                 @click="selectAlignment('Neutral Evil')">
+                <div class="alignment-name">Neutral Evil</div>
+                <div class="alignment-nickname">"Malefactor"</div>
+                <div class="alignment-icon">💀</div>
+            </div>
+            <div class="alignment-cell"
+                 :class="{ 'selected': selectedAlignment === 'Chaotic Evil' }"
+                 @click="selectAlignment('Chaotic Evil')">
+                <div class="alignment-name">Chaotic Evil</div>
+                <div class="alignment-nickname">"Destroyer"</div>
+                <div class="alignment-icon">🔥💀</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selected Alignment Details -->
+    <div x-show="selectedAlignment" class="dnd-card" x-transition:enter="fade-in">
+        <h3 class="text-xl font-bold text-dnd-secondary mb-4">
+            <span x-text="selectedAlignment"></span> Character
+        </h3>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Description -->
+            <div>
+                <h4 class="font-semibold text-dnd-text mb-3">Personality</h4>
+                <p class="text-sm text-dnd-muted" x-text="getAlignmentDescription(selectedAlignment)"></p>
+            </div>
+
+            <!-- Motivations -->
+            <div>
+                <h4 class="font-semibold text-dnd-text mb-3">Typical Motivations</h4>
+                <ul class="text-sm text-dnd-muted space-y-1" x-html="getAlignmentMotivations(selectedAlignment)"></ul>
+            </div>
+        </div>
+
+        <!-- Famous Examples -->
+        <div class="mt-6 pt-4 border-t border-dnd">
+            <h4 class="font-semibold text-dnd-text mb-2">Famous Examples</h4>
+            <p class="text-sm text-dnd-muted" x-text="getAlignmentExamples(selectedAlignment)"></p>
+        </div>
+    </div>
+
+    <!-- Skip Option -->
+    <div class="dnd-card bg-dnd-background border-dashed">
+        <div class="text-center">
+            <h3 class="font-semibold text-dnd-text mb-2">Not Sure? That's Okay!</h3>
+            <p class="text-sm text-dnd-muted mb-4">
+                Alignment can evolve as you play your character. You can skip this step and decide later.
+            </p>
+            <button @click="skipAlignment()" class="dnd-button-outline">
+                Skip Alignment for Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Form Input -->
+    <input type="hidden" name="alignment" :value="selectedAlignment">
+</div>
+
+<script>
+    function alignmentSelection() {
+        return {
+            selectedAlignment: {% if character.alignment %}'{{ character.alignment }}'{% else %}null{% endif %},
+
+            selectAlignment(alignment) {
+                this.selectedAlignment = alignment;
+                this.saveSelection();
+            },
+
+            skipAlignment() {
+                this.selectedAlignment = null;
+                this.saveSelection();
+            },
+
+            async saveSelection() {
+                try {
+                    await DnDApp.utils.apiRequest(`/characters/api/${DnDApp.characterState.characterId}/`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            alignment: this.selectedAlignment
+                        })
+                    });
+                } catch (error) {
+                    console.error('Failed to save alignment selection:', error);
+                }
+            },
+
+            getAlignmentDescription(alignment) {
+                const descriptions = {
+                    'Lawful Good': 'Acts with compassion and always with honor and a sense of duty. Combines a commitment to oppose evil with the discipline to fight relentlessly.',
+                    'Neutral Good': 'Does the best they can to help others according to their needs. Willing to work with kings and magistrates but does not feel beholden to them.',
+                    'Chaotic Good': 'Acts as their conscience directs, with little regard for what others expect. Makes their own way, but is kind and benevolent.',
+                    'Lawful Neutral': 'Acts in accordance with law, tradition, or personal codes. May believe in personal order and live by it or natural order.',
+                    'True Neutral': 'Avoids moral questions and does not take sides, doing what seems best at the time. May be committed to balance in all things.',
+                    'Chaotic Neutral': 'Follows their whims and values their personal freedom. Avoids authority, resents restrictions, and challenges traditions.',
+                    'Lawful Evil': 'Methodically takes what they want, within the limits of a code of tradition, loyalty, or order. Cares about tradition and order but not about freedom or lives.',
+                    'Neutral Evil': 'Does whatever they can get away with, without compassion or qualms. Shows no preference for order or chaos and is purely selfish.',
+                    'Chaotic Evil': 'Acts with arbitrary violence, spurred by their greed, hatred, or bloodlust. Unpredictably brutal and wholly evil.'
+                };
+                return descriptions[alignment] || '';
+            },
+
+            getAlignmentMotivations(alignment) {
+                const motivations = {
+                    'Lawful Good': '<li>• Protecting innocent lives</li><li>• Upholding justice and law</li><li>• Fighting for the greater good</li><li>• Keeping promises and oaths</li>',
+                    'Neutral Good': '<li>• Helping those in need</li><li>• Doing what feels right</li><li>• Supporting friends and allies</li><li>• Avoiding unnecessary conflict</li>',
+                    'Chaotic Good': '<li>• Fighting oppression and tyranny</li><li>• Standing up for the underdog</li><li>• Following personal moral code</li><li>• Challenging unjust authority</li>',
+                    'Lawful Neutral': '<li>• Maintaining order and stability</li><li>• Following established procedures</li><li>• Respecting legitimate authority</li><li>• Keeping agreements</li>',
+                    'True Neutral': '<li>• Maintaining balance in all things</li><li>• Avoiding extremes</li><li>• Self-preservation</li><li>• Adapting to circumstances</li>',
+                    'Chaotic Neutral': '<li>• Personal freedom above all</li><li>• Following impulses and whims</li><li>• Avoiding commitments</li><li>• Challenging restrictions</li>',
+                    'Lawful Evil': '<li>• Gaining power through systems</li><li>• Exploiting legal loopholes</li><li>• Building personal empires</li><li>• Dominating through organization</li>',
+                    'Neutral Evil': '<li>• Pure self-interest</li><li>• Accumulating power and wealth</li><li>• Exploiting any advantage</li><li>• Avoiding consequences</li>',
+                    'Chaotic Evil': '<li>• Causing chaos and destruction</li><li>• Satisfying personal desires</li><li>• Spreading fear and pain</li><li>• Destroying what others build</li>'
+                };
+                return motivations[alignment] || '';
+            },
+
+            getAlignmentExamples(alignment) {
+                const examples = {
+                    'Lawful Good': 'Superman, Captain America, Paladins, Many Clerics',
+                    'Neutral Good': 'Spider-Man, Harry Potter, Many Rangers, Druids focused on protection',
+                    'Chaotic Good': 'Robin Hood, Han Solo, Many Barbarians fighting for their tribe',
+                    'Lawful Neutral': 'Judge Dredd, Many Monks, Soldiers following orders',
+                    'True Neutral': 'Many Druids, Some Rangers, Balanced Wizards studying magic',
+                    'Chaotic Neutral': 'Jack Sparrow, Many Bards, Free-spirited Sorcerers',
+                    'Lawful Evil': 'Darth Vader, Magneto, Tyrannical rulers with codes',
+                    'Neutral Evil': 'The Joker (some versions), Selfish Warlocks, Ruthless merchants',
+                    'Chaotic Evil': 'The Joker (most versions), Demon lords, Destructive forces of nature'
+                };
+                return examples[alignment] || '';
+            }
+        }
+    }
+</script>
+{% endblock %}
+
+{% block help_content %}
+<div class="space-y-3">
+    <h4 class="font-semibold text-dnd-secondary">Understanding Alignment</h4>
+    <p>Alignment is a tool to help you understand your character's personality, not a straightjacket.</p>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Two Axes:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Good vs Evil:</strong> Your moral compass</li>
+            <li>• <strong>Law vs Chaos:</strong> Your view on order and rules</li>
+        </ul>
+    </div>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Popular Choices:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Lawful Good:</strong> Classic hero</li>
+            <li>• <strong>Chaotic Good:</strong> Rebel with a cause</li>
+            <li>• <strong>Chaotic Neutral:</strong> Free spirit</li>
+        </ul>
+    </div>
+
+    <p class="text-xs text-dnd-muted">Remember: You can always change your alignment as your character grows and changes through play!</p>
+</div>
+{% endblock %}
+
+<style>
+.alignment-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 1fr;
+    grid-template-rows: 40px 1fr 1fr 1fr;
+    gap: 8px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.alignment-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alignment-row-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+
+.alignment-cell {
+    @apply bg-dnd-surface border border-dnd rounded-lg p-4 cursor-pointer transition-all duration-200 hover:border-dnd-primary hover:shadow-lg text-center;
+}
+
+.alignment-cell.selected {
+    @apply border-dnd-primary bg-dnd-primary bg-opacity-10 ring-2 ring-dnd-primary ring-opacity-30;
+}
+
+.alignment-name {
+    @apply font-semibold text-dnd-text text-sm;
+}
+
+.alignment-nickname {
+    @apply text-xs text-dnd-muted mt-1;
+}
+
+.alignment-icon {
+    @apply text-2xl mt-2;
+}
+
+@media (max-width: 768px) {
+    .alignment-grid {
+        grid-template-columns: 60px 1fr 1fr 1fr;
+        gap: 4px;
+    }
+
+    .alignment-cell {
+        @apply p-2;
+    }
+
+    .alignment-name {
+        @apply text-xs;
+    }
+
+    .alignment-nickname {
+        @apply hidden;
+    }
+
+    .alignment-icon {
+        @apply text-lg mt-1;
+    }
+}
+</style>

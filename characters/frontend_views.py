@@ -16,7 +16,7 @@ from django.db.models import Q
 
 from .models import Character
 from game_content.models import DnDClass, Species, Background, Equipment, Spell, Skill
-from .services import CharacterCalculationService, CharacterValidationService, RecommendationService
+# from .services import CharacterCalculationService, CharacterValidationService, RecommendationService
 
 
 class CharacterListView(LoginRequiredMixin, ListView):
@@ -212,7 +212,8 @@ def character_sheet_view(request, character_id):
 
     # Calculate all character stats
     if hasattr(character, 'abilities'):
-        stats = CharacterCalculationService.calculate_all_stats(character)
+        # stats = CharacterCalculationService.calculate_all_stats(character)
+        stats = {}  # Stub for demo
     else:
         stats = {}
 
@@ -323,12 +324,14 @@ def get_step_context(character, step):
 
         # Show synergy recommendations if class is selected
         if character.dnd_class:
-            context['recommended_species'] = RecommendationService.recommend_species_for_class(
-                character.dnd_class.name
-            )
-            context['recommended_backgrounds'] = RecommendationService.recommend_background_for_class(
-                character.dnd_class.name
-            )
+            # context['recommended_species'] = RecommendationService.recommend_species_for_class(
+            #     character.dnd_class.name
+            # )
+            # context['recommended_backgrounds'] = RecommendationService.recommend_background_for_class(
+            #     character.dnd_class.name
+            # )
+            context['recommended_species'] = ['Human', 'Elf', 'Dwarf']  # Stub
+            context['recommended_backgrounds'] = ['Soldier', 'Acolyte']  # Stub
 
     elif step == 3:
         # Ability Scores
@@ -336,9 +339,13 @@ def get_step_context(character, step):
 
         # Ability score recommendations for the class
         if character.dnd_class:
-            context['ability_priorities'] = RecommendationService.recommend_ability_score_priority(
-                character.dnd_class.name
-            )
+            # context['ability_priorities'] = RecommendationService.recommend_ability_score_priority(
+            #     character.dnd_class.name
+            # )
+            context['ability_priorities'] = {  # Stub
+                'strength': 1, 'constitution': 2, 'dexterity': 3,
+                'wisdom': 4, 'charisma': 5, 'intelligence': 6
+            }
 
     elif step == 4:
         # Alignment

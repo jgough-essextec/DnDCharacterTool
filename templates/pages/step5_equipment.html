@@ -1,0 +1,742 @@
+{% extends 'base/character_wizard.html' %}
+{% load static %}
+
+{% block step_content %}
+<div x-data="equipmentAndSpells()" class="space-y-8">
+    <!-- Step Header -->
+    <div class="text-center">
+        <h2 class="text-3xl font-bold text-dnd-secondary mb-2">Equipment & Spells</h2>
+        <p class="text-dnd-muted max-w-2xl mx-auto">
+            Equip your character with armor, weapons, and gear. If your class can cast spells,
+            you'll also select your starting cantrips and spells here.
+        </p>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex justify-center">
+        <div class="bg-dnd-surface rounded-lg p-1 flex">
+            <button @click="activeTab = 'equipment'"
+                    :class="activeTab === 'equipment' ? 'bg-dnd-primary text-white' : 'text-dnd-muted hover:text-dnd-text'"
+                    class="px-6 py-2 rounded-md font-medium transition-colors">
+                Equipment
+                <span x-show="hasSelectedEquipment()" class="ml-2 text-dnd-secondary">✓</span>
+            </button>
+            <button x-show="isSpellcaster"
+                    @click="activeTab = 'spells'"
+                    :class="activeTab === 'spells' ? 'bg-dnd-primary text-white' : 'text-dnd-muted hover:text-dnd-text'"
+                    class="px-6 py-2 rounded-md font-medium transition-colors">
+                Spells
+                <span x-show="hasSelectedSpells()" class="ml-2 text-dnd-secondary">✓</span>
+            </button>
+            <button @click="activeTab = 'summary'"
+                    :class="activeTab === 'summary' ? 'bg-dnd-primary text-white' : 'text-dnd-muted hover:text-dnd-text'"
+                    class="px-6 py-2 rounded-md font-medium transition-colors">
+                Summary
+                <span x-show="hasSelectedEquipment() && (!isSpellcaster || hasSelectedSpells())" class="ml-2 text-dnd-secondary">✓</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Equipment Tab -->
+    <div x-show="activeTab === 'equipment'" x-transition:enter="fade-in">
+        <!-- Starting Equipment Choice -->
+        <div class="dnd-card">
+            <h3 class="text-lg font-semibold text-dnd-text mb-4">Choose Starting Equipment</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Equipment Package -->
+                <div class="equipment-choice"
+                     :class="{ 'selected': equipmentMethod === 'package' }"
+                     @click="setEquipmentMethod('package')">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-semibold text-dnd-text">Equipment Package</h4>
+                        <div class="text-2xl">📦</div>
+                    </div>
+                    <p class="text-sm text-dnd-muted mb-3">Get a carefully curated set of starting equipment for your class.</p>
+                    <div class="text-xs text-dnd-secondary">Recommended for new players</div>
+                </div>
+
+                <!-- Buy Equipment -->
+                <div class="equipment-choice"
+                     :class="{ 'selected': equipmentMethod === 'gold' }"
+                     @click="setEquipmentMethod('gold')">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-semibold text-dnd-text">Buy Equipment</h4>
+                        <div class="text-2xl">💰</div>
+                    </div>
+                    <p class="text-sm text-dnd-muted mb-3">Start with gold and buy exactly what you want.</p>
+                    <div class="text-xs text-dnd-secondary" x-text="startingGold + ' gold pieces'"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Package Interface -->
+        <div x-show="equipmentMethod === 'package'" class="space-y-6">
+            <!-- Armor Selection -->
+            <div class="dnd-card">
+                <h4 class="font-semibold text-dnd-text mb-4">Armor</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <template x-for="armor in availableArmor" :key="armor.id">
+                        <div class="equipment-item"
+                             :class="{ 'selected': selectedArmor?.id === armor.id }"
+                             @click="selectArmor(armor)">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="font-medium text-dnd-text" x-text="armor.name"></h5>
+                                <span class="text-sm text-dnd-secondary" x-text="'AC ' + calculateArmorAC(armor)"></span>
+                            </div>
+                            <p class="text-xs text-dnd-muted mb-2" x-text="armor.description"></p>
+                            <div class="text-xs space-y-1">
+                                <div>Type: <span x-text="armor.armor_type"></span></div>
+                                <div x-show="armor.stealth_disadvantage">Stealth: Disadvantage</div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Weapon Selection -->
+            <div class="dnd-card">
+                <h4 class="font-semibold text-dnd-text mb-4">Weapons</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Primary Weapon -->
+                    <div>
+                        <h5 class="font-medium text-dnd-text mb-3">Primary Weapon</h5>
+                        <div class="space-y-3">
+                            <template x-for="weapon in availablePrimaryWeapons" :key="weapon.id">
+                                <div class="equipment-item"
+                                     :class="{ 'selected': selectedPrimaryWeapon?.id === weapon.id }"
+                                     @click="selectPrimaryWeapon(weapon)">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h6 class="font-medium text-dnd-text" x-text="weapon.name"></h6>
+                                        <span class="text-sm text-dnd-secondary" x-text="weapon.damage_dice + ' ' + weapon.damage_type"></span>
+                                    </div>
+                                    <div class="text-xs text-dnd-muted" x-text="weapon.properties?.join(', ') || 'No special properties'"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Weapon/Shield -->
+                    <div>
+                        <h5 class="font-medium text-dnd-text mb-3">Secondary/Shield</h5>
+                        <div class="space-y-3">
+                            <template x-for="item in availableSecondaryItems" :key="item.id">
+                                <div class="equipment-item"
+                                     :class="{ 'selected': selectedSecondaryItem?.id === item.id }"
+                                     @click="selectSecondaryItem(item)">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h6 class="font-medium text-dnd-text" x-text="item.name"></h6>
+                                        <span class="text-sm text-dnd-secondary" x-text="getItemBenefit(item)"></span>
+                                    </div>
+                                    <div class="text-xs text-dnd-muted" x-text="item.description || getItemDescription(item)"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tools and Equipment -->
+            <div class="dnd-card">
+                <h4 class="font-semibold text-dnd-text mb-4">Tools & Equipment</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <template x-for="item in startingEquipmentPackage" :key="item.name">
+                        <div class="flex items-center p-3 bg-dnd-background rounded-lg">
+                            <div class="w-8 h-8 bg-dnd-surface rounded flex items-center justify-center mr-3">
+                                <span class="text-sm" x-text="getItemIcon(item.name)"></span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium text-dnd-text" x-text="item.name"></div>
+                                <div class="text-xs text-dnd-muted" x-text="'Quantity: ' + item.quantity"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buy Equipment Interface -->
+        <div x-show="equipmentMethod === 'gold'" class="space-y-6">
+            <!-- Gold Counter and Shopping Cart -->
+            <div class="dnd-card">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold text-dnd-text">Equipment Shop</h4>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-dnd-secondary" x-text="remainingGold + ' gp'"></div>
+                        <div class="text-xs text-dnd-muted">Remaining Gold</div>
+                    </div>
+                </div>
+
+                <!-- Equipment Categories -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <template x-for="category in equipmentCategories" :key="category">
+                        <button @click="selectedCategory = category"
+                                :class="selectedCategory === category ? 'dnd-button-primary' : 'dnd-button-outline'"
+                                class="text-sm" x-text="category">
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Equipment Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                    <template x-for="item in filteredEquipment" :key="item.id">
+                        <div class="equipment-shop-item">
+                            <div class="flex items-center justify-between mb-2">
+                                <h6 class="font-medium text-dnd-text" x-text="item.name"></h6>
+                                <span class="text-sm font-bold text-dnd-secondary" x-text="item.cost_gp + ' gp'"></span>
+                            </div>
+                            <p class="text-xs text-dnd-muted mb-3" x-text="item.description"></p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-dnd-muted" x-text="'Weight: ' + item.weight + ' lb'"></span>
+                                <button @click="addToCart(item)"
+                                        :disabled="item.cost_gp > remainingGold"
+                                        class="text-xs dnd-button-primary px-2 py-1 disabled:opacity-50">
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Shopping Cart -->
+            <div x-show="cart.length > 0" class="dnd-card">
+                <h4 class="font-semibold text-dnd-text mb-4">Equipment Cart</h4>
+                <div class="space-y-2">
+                    <template x-for="(item, index) in cart" :key="index">
+                        <div class="flex items-center justify-between p-2 bg-dnd-background rounded">
+                            <span class="text-dnd-text" x-text="item.name"></span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-dnd-secondary" x-text="item.cost_gp + ' gp'"></span>
+                                <button @click="removeFromCart(index)" class="text-red-400 hover:text-red-300 text-sm">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="border-t border-dnd mt-4 pt-4">
+                    <div class="flex justify-between text-lg font-semibold">
+                        <span>Total Spent:</span>
+                        <span x-text="totalSpent + ' gp'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current AC Display -->
+        <div class="dnd-card bg-dnd-primary bg-opacity-10">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-dnd-primary" x-text="currentAC"></div>
+                <div class="text-sm text-dnd-muted">Armor Class</div>
+                <div class="text-xs text-dnd-muted mt-1" x-text="acBreakdown"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spells Tab -->
+    <div x-show="activeTab === 'spells' && isSpellcaster" x-transition:enter="fade-in">
+        <!-- Spell Selection Info -->
+        <div class="dnd-card">
+            <div class="flex items-center mb-4">
+                <svg class="w-6 h-6 text-dnd-secondary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                <div>
+                    <h3 class="text-lg font-semibold text-dnd-secondary">Spell Selection</h3>
+                    <p class="text-sm text-dnd-muted">
+                        Choose <span x-text="spellsToSelect.cantrips"></span> cantrips and <span x-text="spellsToSelect.level1"></span> 1st-level spells.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cantrips -->
+        <div class="dnd-card">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="font-semibold text-dnd-text">Cantrips</h4>
+                <div class="text-sm text-dnd-muted">
+                    <span x-text="selectedCantrips.length"></span>/<span x-text="spellsToSelect.cantrips"></span> selected
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <template x-for="spell in availableCantrips" :key="spell.id">
+                    <div class="spell-card"
+                         :class="{ 'selected': isSpellSelected(spell, 'cantrip'), 'disabled': !canSelectMoreCantrips() && !isSpellSelected(spell, 'cantrip') }"
+                         @click="toggleSpellSelection(spell, 'cantrip')">
+                        <div class="flex items-start justify-between mb-2">
+                            <h5 class="font-medium text-dnd-text" x-text="spell.name"></h5>
+                            <div class="text-xs text-dnd-secondary bg-dnd-secondary bg-opacity-20 px-2 py-1 rounded" x-text="spell.school"></div>
+                        </div>
+                        <p class="text-xs text-dnd-muted mb-2" x-text="spell.description"></p>
+                        <div class="flex items-center justify-between text-xs text-dnd-muted">
+                            <span x-text="spell.casting_time"></span>
+                            <span x-text="spell.range"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- 1st Level Spells -->
+        <div x-show="spellsToSelect.level1 > 0" class="dnd-card">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="font-semibold text-dnd-text">1st-Level Spells</h4>
+                <div class="text-sm text-dnd-muted">
+                    <span x-text="selectedLevel1Spells.length"></span>/<span x-text="spellsToSelect.level1"></span> selected
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <template x-for="spell in availableLevel1Spells" :key="spell.id">
+                    <div class="spell-card"
+                         :class="{ 'selected': isSpellSelected(spell, 'level1'), 'disabled': !canSelectMoreLevel1Spells() && !isSpellSelected(spell, 'level1') }"
+                         @click="toggleSpellSelection(spell, 'level1')">
+                        <div class="flex items-start justify-between mb-2">
+                            <h5 class="font-medium text-dnd-text" x-text="spell.name"></h5>
+                            <div class="text-xs text-dnd-secondary bg-dnd-secondary bg-opacity-20 px-2 py-1 rounded" x-text="spell.school"></div>
+                        </div>
+                        <p class="text-xs text-dnd-muted mb-2" x-text="spell.description"></p>
+                        <div class="flex items-center justify-between text-xs text-dnd-muted">
+                            <span x-text="spell.casting_time"></span>
+                            <span x-text="spell.range"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Tab -->
+    <div x-show="activeTab === 'summary'" x-transition:enter="fade-in">
+        <div class="dnd-card">
+            <h3 class="text-2xl font-bold text-dnd-secondary mb-6 text-center">Equipment & Spells Summary</h3>
+
+            <!-- Equipment Summary -->
+            <div class="mb-8">
+                <h4 class="text-lg font-semibold text-dnd-text mb-4">Equipment</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Worn Equipment -->
+                    <div class="space-y-4">
+                        <h5 class="font-medium text-dnd-text">Worn/Wielded</h5>
+                        <div class="space-y-2">
+                            <div x-show="selectedArmor" class="flex items-center justify-between p-2 bg-dnd-background rounded">
+                                <span x-text="selectedArmor?.name"></span>
+                                <span class="text-sm text-dnd-secondary" x-text="'AC ' + calculateArmorAC(selectedArmor)"></span>
+                            </div>
+                            <div x-show="selectedPrimaryWeapon" class="flex items-center justify-between p-2 bg-dnd-background rounded">
+                                <span x-text="selectedPrimaryWeapon?.name"></span>
+                                <span class="text-sm text-dnd-secondary" x-text="selectedPrimaryWeapon?.damage_dice + ' ' + selectedPrimaryWeapon?.damage_type"></span>
+                            </div>
+                            <div x-show="selectedSecondaryItem" class="flex items-center justify-between p-2 bg-dnd-background rounded">
+                                <span x-text="selectedSecondaryItem?.name"></span>
+                                <span class="text-sm text-dnd-secondary" x-text="getItemBenefit(selectedSecondaryItem)"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total AC -->
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-dnd-primary mb-2" x-text="currentAC"></div>
+                        <div class="text-sm text-dnd-muted">Total Armor Class</div>
+                        <div class="text-xs text-dnd-muted mt-1" x-text="acBreakdown"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spells Summary -->
+            <div x-show="isSpellcaster" class="mb-8">
+                <h4 class="text-lg font-semibold text-dnd-text mb-4">Known Spells</h4>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Cantrips -->
+                    <div x-show="selectedCantrips.length > 0">
+                        <h5 class="font-medium text-dnd-text mb-3">Cantrips</h5>
+                        <div class="space-y-2">
+                            <template x-for="spell in selectedCantrips" :key="spell.id">
+                                <div class="flex items-center justify-between p-2 bg-dnd-background rounded">
+                                    <span x-text="spell.name"></span>
+                                    <span class="text-xs text-dnd-secondary" x-text="spell.school"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- 1st Level Spells -->
+                    <div x-show="selectedLevel1Spells.length > 0">
+                        <h5 class="font-medium text-dnd-text mb-3">1st-Level Spells</h5>
+                        <div class="space-y-2">
+                            <template x-for="spell in selectedLevel1Spells" :key="spell.id">
+                                <div class="flex items-center justify-between p-2 bg-dnd-background rounded">
+                                    <span x-text="spell.name"></span>
+                                    <span class="text-xs text-dnd-secondary" x-text="spell.school"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Form Inputs -->
+    <div class="hidden">
+        <input type="hidden" name="equipment_method" :value="equipmentMethod">
+
+        <!-- Equipment Package Inputs -->
+        <template x-if="equipmentMethod === 'package'">
+            <div>
+                <input type="hidden" name="selected_armor" :value="selectedArmor?.id">
+                <input type="hidden" name="selected_primary_weapon" :value="selectedPrimaryWeapon?.id">
+                <input type="hidden" name="selected_secondary_item" :value="selectedSecondaryItem?.id">
+            </div>
+        </template>
+
+        <!-- Gold Method Inputs -->
+        <template x-if="equipmentMethod === 'gold'">
+            <div>
+                <template x-for="(item, index) in cart" :key="index">
+                    <input type="hidden" :name="'cart_item_' + index" :value="item.id">
+                </template>
+            </div>
+        </template>
+
+        <!-- Spell Inputs -->
+        <template x-if="isSpellcaster">
+            <div>
+                <template x-for="spell in selectedCantrips" :key="spell.id">
+                    <input type="hidden" name="selected_cantrips" :value="spell.id">
+                </template>
+                <template x-for="spell in selectedLevel1Spells" :key="spell.id">
+                    <input type="hidden" name="selected_level1_spells" :value="spell.id">
+                </template>
+            </div>
+        </template>
+    </div>
+</div>
+
+<script>
+    function equipmentAndSpells() {
+        return {
+            activeTab: 'equipment',
+            equipmentMethod: 'package',
+
+            // Character info
+            isSpellcaster: {{ character.dnd_class.spellcaster|yesno:"true,false" }},
+            startingGold: {{ starting_gold|default:0 }},
+            dexterityModifier: {{ character.abilities.dexterity_modifier|default:0 }},
+
+            // Equipment data
+            availableArmor: {{ available_armor|safe }},
+            availablePrimaryWeapons: {{ available_primary_weapons|safe }},
+            availableSecondaryItems: {{ available_secondary_items|safe }},
+            startingEquipmentPackage: {{ starting_equipment_package|safe }},
+
+            // Selected equipment
+            selectedArmor: null,
+            selectedPrimaryWeapon: null,
+            selectedSecondaryItem: null,
+
+            // Shopping
+            selectedCategory: 'Armor',
+            equipmentCategories: ['Armor', 'Weapons', 'Adventuring Gear', 'Tools'],
+            cart: [],
+            allEquipment: {{ all_equipment|safe }},
+
+            // Spells
+            availableCantrips: {{ available_cantrips|safe }},
+            availableLevel1Spells: {{ available_level1_spells|safe }},
+            selectedCantrips: [],
+            selectedLevel1Spells: [],
+            spellsToSelect: {{ spells_to_select|safe }},
+
+            init() {
+                // Load existing selections if any
+                {% if existing_equipment %}
+                    this.loadExistingEquipment();
+                {% endif %}
+                {% if existing_spells %}
+                    this.loadExistingSpells();
+                {% endif %}
+            },
+
+            // Equipment methods
+            setEquipmentMethod(method) {
+                this.equipmentMethod = method;
+                if (method === 'gold') {
+                    this.activeTab = 'equipment';
+                }
+            },
+
+            selectArmor(armor) {
+                this.selectedArmor = armor;
+                this.saveSelection();
+            },
+
+            selectPrimaryWeapon(weapon) {
+                this.selectedPrimaryWeapon = weapon;
+                this.saveSelection();
+            },
+
+            selectSecondaryItem(item) {
+                this.selectedSecondaryItem = item;
+                this.saveSelection();
+            },
+
+            calculateArmorAC(armor) {
+                if (!armor) return 10 + this.dexterityModifier;
+
+                let ac = armor.base_ac;
+                let dexBonus = this.dexterityModifier;
+
+                if (armor.dex_bonus_limit !== null) {
+                    dexBonus = Math.min(dexBonus, armor.dex_bonus_limit);
+                }
+
+                return ac + dexBonus;
+            },
+
+            get currentAC() {
+                let baseAC = 10 + this.dexterityModifier;
+
+                if (this.selectedArmor) {
+                    baseAC = this.calculateArmorAC(this.selectedArmor);
+                }
+
+                // Add shield bonus if applicable
+                if (this.selectedSecondaryItem?.equipment_type === 'Shield') {
+                    baseAC += 2;
+                }
+
+                return baseAC;
+            },
+
+            get acBreakdown() {
+                let parts = [];
+
+                if (this.selectedArmor) {
+                    parts.push(this.selectedArmor.name + ' (' + this.selectedArmor.base_ac + ')');
+                    if (this.selectedArmor.dex_bonus_limit !== null) {
+                        parts.push('Dex (' + Math.min(this.dexterityModifier, this.selectedArmor.dex_bonus_limit) + ')');
+                    } else {
+                        parts.push('Dex (' + this.dexterityModifier + ')');
+                    }
+                } else {
+                    parts.push('Base (10)');
+                    parts.push('Dex (' + this.dexterityModifier + ')');
+                }
+
+                if (this.selectedSecondaryItem?.equipment_type === 'Shield') {
+                    parts.push('Shield (+2)');
+                }
+
+                return parts.join(' + ');
+            },
+
+            hasSelectedEquipment() {
+                if (this.equipmentMethod === 'package') {
+                    return this.selectedArmor && this.selectedPrimaryWeapon;
+                } else {
+                    return this.cart.length > 0;
+                }
+            },
+
+            getItemBenefit(item) {
+                if (item.equipment_type === 'Shield') return '+2 AC';
+                if (item.damage_dice) return item.damage_dice + ' ' + item.damage_type;
+                return item.equipment_type || '';
+            },
+
+            getItemDescription(item) {
+                if (item.equipment_type === 'Shield') return 'Provides +2 to Armor Class';
+                return item.description || '';
+            },
+
+            getItemIcon(itemName) {
+                const icons = {
+                    'Backpack': '🎒',
+                    'Rope': '🪢',
+                    'Torch': '🔦',
+                    'Rations': '🥖',
+                    'Waterskin': '🧴',
+                    'Bedroll': '🛏️',
+                    'Thieves\' Tools': '🔧',
+                    'Spellbook': '📚',
+                    'Component Pouch': '👝'
+                };
+                return icons[itemName] || '📦';
+            },
+
+            // Shopping methods
+            get filteredEquipment() {
+                return this.allEquipment.filter(item =>
+                    item.equipment_type === this.selectedCategory ||
+                    (this.selectedCategory === 'Weapons' && (item.equipment_type === 'Simple Weapon' || item.equipment_type === 'Martial Weapon'))
+                );
+            },
+
+            get remainingGold() {
+                return this.startingGold - this.totalSpent;
+            },
+
+            get totalSpent() {
+                return this.cart.reduce((total, item) => total + item.cost_gp, 0);
+            },
+
+            addToCart(item) {
+                if (item.cost_gp <= this.remainingGold) {
+                    this.cart.push({...item});
+                    this.saveSelection();
+                }
+            },
+
+            removeFromCart(index) {
+                this.cart.splice(index, 1);
+                this.saveSelection();
+            },
+
+            // Spell methods
+            hasSelectedSpells() {
+                if (!this.isSpellcaster) return true;
+
+                const hasRequiredCantrips = this.selectedCantrips.length >= this.spellsToSelect.cantrips;
+                const hasRequiredLevel1 = this.spellsToSelect.level1 === 0 || this.selectedLevel1Spells.length >= this.spellsToSelect.level1;
+
+                return hasRequiredCantrips && hasRequiredLevel1;
+            },
+
+            canSelectMoreCantrips() {
+                return this.selectedCantrips.length < this.spellsToSelect.cantrips;
+            },
+
+            canSelectMoreLevel1Spells() {
+                return this.selectedLevel1Spells.length < this.spellsToSelect.level1;
+            },
+
+            isSpellSelected(spell, type) {
+                if (type === 'cantrip') {
+                    return this.selectedCantrips.some(s => s.id === spell.id);
+                } else {
+                    return this.selectedLevel1Spells.some(s => s.id === spell.id);
+                }
+            },
+
+            toggleSpellSelection(spell, type) {
+                if (type === 'cantrip') {
+                    const index = this.selectedCantrips.findIndex(s => s.id === spell.id);
+                    if (index >= 0) {
+                        this.selectedCantrips.splice(index, 1);
+                    } else if (this.canSelectMoreCantrips()) {
+                        this.selectedCantrips.push(spell);
+                    }
+                } else {
+                    const index = this.selectedLevel1Spells.findIndex(s => s.id === spell.id);
+                    if (index >= 0) {
+                        this.selectedLevel1Spells.splice(index, 1);
+                    } else if (this.canSelectMoreLevel1Spells()) {
+                        this.selectedLevel1Spells.push(spell);
+                    }
+                }
+                this.saveSelection();
+            },
+
+            async saveSelection() {
+                try {
+                    const data = {
+                        equipment_method: this.equipmentMethod
+                    };
+
+                    if (this.equipmentMethod === 'package') {
+                        if (this.selectedArmor) data.selected_armor = this.selectedArmor.id;
+                        if (this.selectedPrimaryWeapon) data.selected_primary_weapon = this.selectedPrimaryWeapon.id;
+                        if (this.selectedSecondaryItem) data.selected_secondary_item = this.selectedSecondaryItem.id;
+                    } else {
+                        data.cart_items = this.cart.map(item => item.id);
+                    }
+
+                    if (this.isSpellcaster) {
+                        data.selected_cantrips = this.selectedCantrips.map(spell => spell.id);
+                        data.selected_level1_spells = this.selectedLevel1Spells.map(spell => spell.id);
+                    }
+
+                    await DnDApp.utils.apiRequest(`/characters/api/${DnDApp.characterState.characterId}/`, {
+                        method: 'PATCH',
+                        body: JSON.stringify(data)
+                    });
+                } catch (error) {
+                    console.error('Failed to save equipment/spells selection:', error);
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}
+
+{% block help_content %}
+<div class="space-y-3">
+    <h4 class="font-semibold text-dnd-secondary">Equipment & Spells</h4>
+    <p>Gear up your character and select spells if they're a spellcaster.</p>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Equipment Options:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Equipment Package:</strong> Curated gear (recommended)</li>
+            <li>• <strong>Buy with Gold:</strong> Choose exactly what you want</li>
+        </ul>
+    </div>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Important Stats:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Armor Class (AC):</strong> How hard you are to hit</li>
+            <li>• <strong>Damage:</strong> How much hurt your weapons deal</li>
+            <li>• <strong>Weight:</strong> Affects movement if you carry too much</li>
+        </ul>
+    </div>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Spells (if applicable):</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Cantrips:</strong> Unlimited use, minor effects</li>
+            <li>• <strong>1st-level:</strong> Limited uses, more powerful</li>
+        </ul>
+    </div>
+
+    <p class="text-xs text-dnd-muted">Choose equipment that matches your character's fighting style and role!</p>
+</div>
+{% endblock %}
+
+<style>
+.equipment-choice {
+    @apply p-4 border border-dnd rounded-lg cursor-pointer transition-all duration-200 hover:border-dnd-primary;
+}
+
+.equipment-choice.selected {
+    @apply border-dnd-primary bg-dnd-primary bg-opacity-10 ring-2 ring-dnd-primary ring-opacity-30;
+}
+
+.equipment-item {
+    @apply p-3 border border-dnd rounded-lg cursor-pointer transition-all duration-200 hover:border-dnd-primary bg-dnd-surface;
+}
+
+.equipment-item.selected {
+    @apply border-dnd-primary bg-dnd-primary bg-opacity-10;
+}
+
+.equipment-shop-item {
+    @apply p-3 border border-dnd rounded-lg bg-dnd-surface transition-all duration-200 hover:border-dnd-secondary;
+}
+
+.spell-card {
+    @apply p-3 border border-dnd rounded-lg cursor-pointer transition-all duration-200 hover:border-dnd-secondary bg-dnd-surface;
+}
+
+.spell-card.selected {
+    @apply border-dnd-secondary bg-dnd-secondary bg-opacity-10;
+}
+
+.spell-card.disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+</style>

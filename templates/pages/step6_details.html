@@ -1,0 +1,742 @@
+{% extends 'base/character_wizard.html' %}
+{% load static %}
+
+{% block step_content %}
+<div x-data="characterDetails()" class="space-y-8">
+    <!-- Step Header -->
+    <div class="text-center">
+        <h2 class="text-3xl font-bold text-dnd-secondary mb-2">Character Details</h2>
+        <p class="text-dnd-muted max-w-2xl mx-auto">
+            Bring your character to life with personal details, appearance, and backstory.
+            This is where your character becomes a unique individual with their own personality and history.
+        </p>
+    </div>
+
+    <!-- Character Name & Basic Info -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-6">Basic Information</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Character Name -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Character Name *</label>
+                <div class="flex space-x-2">
+                    <input type="text"
+                           x-model="characterName"
+                           @input="saveDetails()"
+                           name="character_name"
+                           placeholder="Enter character name..."
+                           class="flex-1 dnd-input"
+                           required>
+                    <button @click="generateName()"
+                            type="button"
+                            class="dnd-button-outline px-3 py-2 whitespace-nowrap">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Generate
+                    </button>
+                </div>
+                <p class="text-xs text-dnd-muted mt-1">What do people call your character?</p>
+            </div>
+
+            <!-- Pronouns -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Pronouns</label>
+                <select x-model="pronouns"
+                        @change="saveDetails()"
+                        name="pronouns"
+                        class="dnd-select">
+                    <option value="">Select pronouns...</option>
+                    <option value="she/her">she/her</option>
+                    <option value="he/him">he/him</option>
+                    <option value="they/them">they/them</option>
+                    <option value="it/its">it/its</option>
+                    <option value="other">Other (specify in notes)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Physical Characteristics -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-6">Physical Appearance</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Age -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Age</label>
+                <input type="number"
+                       x-model="age"
+                       @input="saveDetails()"
+                       name="age"
+                       min="1"
+                       max="10000"
+                       placeholder="Age in years"
+                       class="dnd-input">
+                <button @click="generateAge()"
+                        type="button"
+                        class="text-xs text-dnd-secondary hover:underline mt-1">
+                    Generate typical age
+                </button>
+            </div>
+
+            <!-- Height -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Height</label>
+                <input type="text"
+                       x-model="height"
+                       @input="saveDetails()"
+                       name="height"
+                       placeholder="e.g., 5'8&quot; or 173 cm"
+                       class="dnd-input">
+                <button @click="generateHeight()"
+                        type="button"
+                        class="text-xs text-dnd-secondary hover:underline mt-1">
+                    Generate typical height
+                </button>
+            </div>
+
+            <!-- Weight -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Weight</label>
+                <input type="text"
+                       x-model="weight"
+                       @input="saveDetails()"
+                       name="weight"
+                       placeholder="e.g., 150 lbs or 68 kg"
+                       class="dnd-input">
+            </div>
+
+            <!-- Eyes -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Eyes</label>
+                <input type="text"
+                       x-model="eyes"
+                       @input="saveDetails()"
+                       name="eyes"
+                       placeholder="Eye color"
+                       class="dnd-input">
+            </div>
+
+            <!-- Skin -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Skin</label>
+                <input type="text"
+                       x-model="skin"
+                       @input="saveDetails()"
+                       name="skin"
+                       placeholder="Skin tone/color"
+                       class="dnd-input">
+            </div>
+
+            <!-- Hair -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Hair</label>
+                <input type="text"
+                       x-model="hair"
+                       @input="saveDetails()"
+                       name="hair"
+                       placeholder="Hair color/style"
+                       class="dnd-input">
+            </div>
+        </div>
+    </div>
+
+    <!-- Character Portrait -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-6">Character Portrait</h3>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Portrait Upload -->
+            <div>
+                <div class="border-2 border-dashed border-dnd rounded-lg p-6 text-center hover:border-dnd-primary transition-colors"
+                     @dragover.prevent
+                     @drop.prevent="handleFileDrop($event)">
+
+                    <div x-show="!portraitUrl" class="space-y-4">
+                        <svg class="mx-auto h-12 w-12 text-dnd-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <div>
+                            <p class="text-sm text-dnd-text">Drag and drop your portrait here</p>
+                            <p class="text-xs text-dnd-muted">or click to browse files</p>
+                        </div>
+                        <input type="file"
+                               @change="handleFileSelect($event)"
+                               accept="image/*"
+                               class="hidden"
+                               x-ref="fileInput">
+                        <button @click="$refs.fileInput.click()"
+                                type="button"
+                                class="dnd-button-outline">
+                            Choose File
+                        </button>
+                    </div>
+
+                    <div x-show="portraitUrl" class="space-y-4">
+                        <img :src="portraitUrl"
+                             alt="Character Portrait"
+                             class="mx-auto max-h-48 rounded-lg">
+                        <div class="flex justify-center space-x-2">
+                            <button @click="$refs.fileInput.click()"
+                                    type="button"
+                                    class="dnd-button-outline text-sm">
+                                Change Image
+                            </button>
+                            <button @click="removePortrait()"
+                                    type="button"
+                                    class="dnd-button-outline text-sm text-red-400 hover:text-red-300">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-dnd-muted mt-2">
+                    Supported formats: JPG, PNG, GIF. Maximum size: 5MB.
+                </p>
+            </div>
+
+            <!-- Portrait Generation (AI/Random) -->
+            <div class="space-y-4">
+                <h4 class="font-medium text-dnd-text">Generate Portrait</h4>
+                <p class="text-sm text-dnd-muted">
+                    Don't have an image? Generate one based on your character details.
+                </p>
+
+                <div class="space-y-3">
+                    <button @click="generatePortrait('ai')"
+                            type="button"
+                            class="w-full dnd-button-secondary flex items-center justify-center"
+                            :disabled="isGeneratingPortrait">
+                        <svg class="w-4 h-4 mr-2" :class="{ 'animate-spin': isGeneratingPortrait }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                        <span x-text="isGeneratingPortrait ? 'Generating...' : 'AI Portrait (Coming Soon)'"></span>
+                    </button>
+
+                    <button @click="generatePortrait('random')"
+                            type="button"
+                            class="w-full dnd-button-outline flex items-center justify-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Random Avatar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personality Traits -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-6">Personality & Motivations</h3>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Personality Traits -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Personality Traits</label>
+                <textarea x-model="personalityTraits"
+                          @input="saveDetails()"
+                          name="personality_traits"
+                          rows="3"
+                          placeholder="What makes your character unique? How do they act around others?"
+                          class="dnd-input resize-none"></textarea>
+                <button @click="generatePersonalityTrait()"
+                        type="button"
+                        class="text-xs text-dnd-secondary hover:underline mt-1">
+                    Suggest a personality trait
+                </button>
+            </div>
+
+            <!-- Ideals -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Ideals</label>
+                <textarea x-model="ideals"
+                          @input="saveDetails()"
+                          name="ideals"
+                          rows="3"
+                          placeholder="What principles does your character believe in? What drives them?"
+                          class="dnd-input resize-none"></textarea>
+                <button @click="generateIdeal()"
+                        type="button"
+                        class="text-xs text-dnd-secondary hover:underline mt-1">
+                    Suggest an ideal
+                </button>
+            </div>
+
+            <!-- Bonds -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Bonds</label>
+                <textarea x-model="bonds"
+                          @input="saveDetails()"
+                          name="bonds"
+                          rows="3"
+                          placeholder="Who or what is important to your character? What connects them to the world?"
+                          class="dnd-input resize-none"></textarea>
+                <button @click="generateBond()"
+                        type="button"
+                        class="text-xs text-dnd-secondary hover:underline mt-1">
+                    Suggest a bond
+                </button>
+            </div>
+
+            <!-- Flaws -->
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Flaws</label>
+                <textarea x-model="flaws"
+                          @input="saveDetails()"
+                          name="flaws"
+                          rows="3"
+                          placeholder="What weaknesses or vices does your character have?"
+                          class="dnd-input resize-none"></textarea>
+                <button @click="generateFlaw()"
+                        type="button"
+                        class="text-xs text-dnd-secondary hover:underline mt-1">
+                    Suggest a flaw
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backstory -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-6">Backstory</h3>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-dnd-text mb-2">Character Backstory</label>
+                <textarea x-model="backstory"
+                          @input="saveDetails()"
+                          name="backstory"
+                          rows="6"
+                          placeholder="Tell your character's story. Where did they come from? What shaped them into who they are today? What brought them to adventuring?"
+                          class="dnd-input resize-none"></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button @click="generateBackstory()"
+                        type="button"
+                        class="dnd-button-outline flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    Generate Backstory Prompt
+                </button>
+
+                <button @click="showBackstoryTips = !showBackstoryTips"
+                        type="button"
+                        class="dnd-button-outline flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Backstory Tips
+                </button>
+            </div>
+
+            <!-- Backstory Tips (collapsible) -->
+            <div x-show="showBackstoryTips"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-1 scale-100"
+                 class="bg-dnd-background p-4 rounded-lg">
+                <h4 class="font-medium text-dnd-text mb-2">Backstory Writing Tips</h4>
+                <ul class="text-sm text-dnd-muted space-y-1">
+                    <li>• <strong>Start simple:</strong> You don't need a novel, just key events</li>
+                    <li>• <strong>Leave mysteries:</strong> Give your DM hooks to use in the story</li>
+                    <li>• <strong>Connect to your background:</strong> How did you gain those skills?</li>
+                    <li>• <strong>Include relationships:</strong> Family, friends, mentors, enemies</li>
+                    <li>• <strong>Explain motivation:</strong> Why did you become an adventurer?</li>
+                    <li>• <strong>Consider trauma:</strong> What challenges shaped your character?</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Notes -->
+    <div class="dnd-card">
+        <h3 class="text-lg font-semibold text-dnd-text mb-4">Additional Notes</h3>
+        <textarea x-model="additionalNotes"
+                  @input="saveDetails()"
+                  name="additional_notes"
+                  rows="4"
+                  placeholder="Any other details about your character? Special mannerisms, fears, goals, relationships, etc."
+                  class="dnd-input resize-none"></textarea>
+    </div>
+
+    <!-- Character Summary Preview -->
+    <div class="dnd-card bg-dnd-primary bg-opacity-5">
+        <h3 class="text-xl font-bold text-dnd-secondary mb-4 text-center">Character Summary</h3>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Portrait & Basic Info -->
+            <div class="text-center">
+                <div class="w-32 h-32 mx-auto mb-4 rounded-lg overflow-hidden bg-dnd-background flex items-center justify-center">
+                    <img x-show="portraitUrl"
+                         :src="portraitUrl"
+                         :alt="characterName + ' portrait'"
+                         class="w-full h-full object-cover">
+                    <svg x-show="!portraitUrl"
+                         class="w-16 h-16 text-dnd-muted"
+                         fill="currentColor"
+                         viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h4 class="text-lg font-bold text-dnd-text" x-text="characterName || 'Unnamed Character'"></h4>
+                <p class="text-sm text-dnd-muted" x-text="getCharacterIdentity()"></p>
+            </div>
+
+            <!-- Character Stats -->
+            <div class="space-y-3">
+                <h5 class="font-semibold text-dnd-text">Character Details</h5>
+                <div class="text-sm space-y-1">
+                    <div x-show="age">Age: <span class="text-dnd-text" x-text="age"></span></div>
+                    <div x-show="height">Height: <span class="text-dnd-text" x-text="height"></span></div>
+                    <div x-show="weight">Weight: <span class="text-dnd-text" x-text="weight"></span></div>
+                    <div x-show="eyes">Eyes: <span class="text-dnd-text" x-text="eyes"></span></div>
+                    <div x-show="hair">Hair: <span class="text-dnd-text" x-text="hair"></span></div>
+                    <div x-show="skin">Skin: <span class="text-dnd-text" x-text="skin"></span></div>
+                </div>
+            </div>
+
+            <!-- Quick Personality -->
+            <div class="space-y-3">
+                <h5 class="font-semibold text-dnd-text">Personality</h5>
+                <div class="text-sm space-y-2">
+                    <div x-show="personalityTraits">
+                        <strong>Traits:</strong> <span class="text-dnd-muted" x-text="truncateText(personalityTraits, 100)"></span>
+                    </div>
+                    <div x-show="ideals">
+                        <strong>Ideals:</strong> <span class="text-dnd-muted" x-text="truncateText(ideals, 80)"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden inputs for form submission -->
+    <input type="hidden" name="portrait_url" :value="portraitUrl">
+</div>
+
+<script>
+    function characterDetails() {
+        return {
+            // Basic Info
+            characterName: '{{ character.character_name|default:"" }}',
+            pronouns: '{{ character.details.pronouns|default:"" }}',
+
+            // Physical
+            age: {{ character.details.age|default:"null" }},
+            height: '{{ character.details.height|default:"" }}',
+            weight: '{{ character.details.weight|default:"" }}',
+            eyes: '{{ character.details.eyes|default:"" }}',
+            skin: '{{ character.details.skin|default:"" }}',
+            hair: '{{ character.details.hair|default:"" }}',
+
+            // Portrait
+            portraitUrl: '{{ character.details.portrait_url|default:"" }}',
+            isGeneratingPortrait: false,
+
+            // Personality
+            personalityTraits: '{{ character.details.personality_traits|default:"" }}',
+            ideals: '{{ character.details.ideals|default:"" }}',
+            bonds: '{{ character.details.bonds|default:"" }}',
+            flaws: '{{ character.details.flaws|default:"" }}',
+            backstory: '{{ character.details.backstory|default:"" }}',
+            additionalNotes: '{{ character.details.notes|default:"" }}',
+
+            // UI State
+            showBackstoryTips: false,
+
+            // Character context for generation
+            characterClass: '{{ character.dnd_class.name|default:"" }}',
+            characterSpecies: '{{ character.species.name|default:"" }}',
+            characterBackground: '{{ character.background.name|default:"" }}',
+
+            async saveDetails() {
+                try {
+                    const data = {
+                        character_name: this.characterName,
+                        details: {
+                            pronouns: this.pronouns,
+                            age: this.age,
+                            height: this.height,
+                            weight: this.weight,
+                            eyes: this.eyes,
+                            skin: this.skin,
+                            hair: this.hair,
+                            portrait_url: this.portraitUrl,
+                            personality_traits: this.personalityTraits,
+                            ideals: this.ideals,
+                            bonds: this.bonds,
+                            flaws: this.flaws,
+                            backstory: this.backstory,
+                            notes: this.additionalNotes
+                        }
+                    };
+
+                    await DnDApp.utils.apiRequest(`/characters/api/${DnDApp.characterState.characterId}/`, {
+                        method: 'PATCH',
+                        body: JSON.stringify(data)
+                    });
+                } catch (error) {
+                    console.error('Failed to save character details:', error);
+                }
+            },
+
+            async generateName() {
+                try {
+                    const response = await DnDApp.utils.apiRequest('/api/utility/names/generate/', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            species: this.characterSpecies,
+                            background: this.characterBackground,
+                            gender: this.pronouns
+                        })
+                    });
+
+                    this.characterName = response.name;
+                    this.saveDetails();
+                } catch (error) {
+                    // Fallback to simple name generation
+                    const names = ['Aeliana', 'Brom', 'Caelynn', 'Dorian', 'Evelyn', 'Finn', 'Gwendolyn', 'Hector', 'Iris', 'Jaxon'];
+                    this.characterName = names[Math.floor(Math.random() * names.length)];
+                    this.saveDetails();
+                }
+            },
+
+            generateAge() {
+                const ageRanges = {
+                    'Human': [18, 80],
+                    'Elf': [100, 750],
+                    'Dwarf': [50, 400],
+                    'Halfling': [20, 200],
+                    'Dragonborn': [15, 80],
+                    'Gnome': [40, 500],
+                    'Half-Elf': [20, 180],
+                    'Half-Orc': [14, 75],
+                    'Tiefling': [18, 100]
+                };
+
+                const range = ageRanges[this.characterSpecies] || [18, 80];
+                const youngAdult = range[0];
+                const mature = Math.floor((range[1] - range[0]) * 0.4) + range[0];
+
+                // Bias toward young adult to mature age
+                this.age = Math.floor(Math.random() * (mature - youngAdult)) + youngAdult;
+                this.saveDetails();
+            },
+
+            generateHeight() {
+                const heightRanges = {
+                    'Human': ['5\'2"', '6\'2"'],
+                    'Elf': ['4\'6"', '6\'0"'],
+                    'Dwarf': ['3\'8"', '4\'3"'],
+                    'Halfling': ['2\'7"', '3\'1"'],
+                    'Dragonborn': ['5\'6"', '6\'8"'],
+                    'Gnome': ['2\'11"', '3\'5"'],
+                    'Half-Elf': ['4\'9"', '6\'2"'],
+                    'Half-Orc': ['5\'10"', '6\'10"'],
+                    'Tiefling': ['4\'9"', '6\'1"']
+                };
+
+                const range = heightRanges[this.characterSpecies] || ['5\'0"', '6\'0"'];
+                this.height = range[Math.floor(Math.random() * range.length)];
+                this.saveDetails();
+            },
+
+            async generatePersonalityTrait() {
+                const traits = [
+                    "I have a joke for every occasion, especially occasions where humor is inappropriate.",
+                    "Flattery is my preferred trick for getting what I want.",
+                    "I'm a born gambler who can't resist taking a risk for a potential payoff.",
+                    "I lie about almost everything, even when there's no good reason to.",
+                    "Sarcasm and insults are my weapons of choice.",
+                    "I like to talk at length about my profession.",
+                    "I don't part with my money easily and will haggle tirelessly to get the best deal possible.",
+                    "I'm well known for my work, and I want to make sure everyone appreciates it."
+                ];
+
+                this.personalityTraits = traits[Math.floor(Math.random() * traits.length)];
+                this.saveDetails();
+            },
+
+            async generateIdeal() {
+                const ideals = [
+                    "Independence. I am a free spirit—no one tells me what to do.",
+                    "Fairness. I never target people who can't afford to lose a few coins.",
+                    "Charity. I distribute the money I acquire to the people who really need it.",
+                    "Creativity. I never run the same con twice.",
+                    "Friendship. Material goods come and go. Bonds of friendship last forever.",
+                    "Aspiration. I'm determined to make something of myself.",
+                    "Honor. I don't steal from others in the trade.",
+                    "Freedom. Chains are meant to be broken, as are those who would forge them."
+                ];
+
+                this.ideals = ideals[Math.floor(Math.random() * ideals.length)];
+                this.saveDetails();
+            },
+
+            async generateBond() {
+                const bonds = [
+                    "I fleeced the wrong person and must work to ensure that this individual never crosses paths with me or those I care about.",
+                    "I owe everything to my mentor—a horrible person who's probably rotting in jail somewhere.",
+                    "Somewhere out there, I have a child who doesn't know me. I'm making the world better for him or her.",
+                    "I come from a noble family, and one day I'll reclaim my lands and title from those who stole them from me.",
+                    "A powerful person killed someone I love. Some day soon, I'll have my revenge.",
+                    "I swindled and ruined a person who didn't deserve it. I seek to atone for my misdeeds but might never be able to forgive myself.",
+                    "My tools are symbols of my past life, and I carry them so that I will never forget my roots.",
+                    "I work to preserve a library, university, scriptorium, or monastery."
+                ];
+
+                this.bonds = bonds[Math.floor(Math.random() * bonds.length)];
+                this.saveDetails();
+            },
+
+            async generateFlaw() {
+                const flaws = [
+                    "I can't resist a pretty face.",
+                    "I'm always in debt. I spend my ill-gotten gains on decadent luxuries faster than I bring them in.",
+                    "I'm convinced that no one could ever fool me the way I fool others.",
+                    "I'm too greedy for my own good. I can't resist taking a risk if there's money involved.",
+                    "I can't resist swindling people who are more powerful than me.",
+                    "I hate to admit it and will hate myself for it, but I'll run and preserve my own hide if the going gets tough.",
+                    "When I see something valuable, I can't think about anything but how to steal it.",
+                    "When faced with a choice between money and my friends, I usually choose the money."
+                ];
+
+                this.flaws = flaws[Math.floor(Math.random() * flaws.length)];
+                this.saveDetails();
+            },
+
+            async generateBackstory() {
+                const prompts = [
+                    `As a ${this.characterSpecies} ${this.characterClass} with a ${this.characterBackground} background, describe a pivotal moment that changed your life's direction.`,
+                    `What event or person inspired you to leave your ${this.characterBackground} life behind and become an adventurer?`,
+                    `Describe your relationship with your family and how it shaped your ${this.characterClass} abilities.`,
+                    `What is the most important lesson you learned during your time as a ${this.characterBackground}?`,
+                    `Tell the story of how you discovered your talents as a ${this.characterClass}.`
+                ];
+
+                const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+                this.backstory = `[Writing Prompt: ${prompt}]\n\n`;
+                this.saveDetails();
+            },
+
+            async handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    await this.uploadPortrait(file);
+                }
+            },
+
+            async handleFileDrop(event) {
+                const file = event.dataTransfer.files[0];
+                if (file) {
+                    await this.uploadPortrait(file);
+                }
+            },
+
+            async uploadPortrait(file) {
+                if (!file.type.startsWith('image/')) {
+                    DnDApp.utils.showToast('Please select an image file', 'error');
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    DnDApp.utils.showToast('Image must be less than 5MB', 'error');
+                    return;
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('portrait', file);
+
+                    const response = await fetch(`/characters/api/${DnDApp.characterState.characterId}/portrait/`, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.portraitUrl = data.portrait_url;
+                        this.saveDetails();
+                        DnDApp.utils.showToast('Portrait uploaded successfully', 'success');
+                    } else {
+                        throw new Error('Upload failed');
+                    }
+                } catch (error) {
+                    console.error('Portrait upload error:', error);
+                    DnDApp.utils.showToast('Failed to upload portrait', 'error');
+                }
+            },
+
+            removePortrait() {
+                this.portraitUrl = '';
+                this.saveDetails();
+            },
+
+            async generatePortrait(type) {
+                if (type === 'ai') {
+                    DnDApp.utils.showToast('AI portrait generation coming soon!', 'info');
+                    return;
+                }
+
+                if (type === 'random') {
+                    // Use a placeholder service like DiceBear or similar
+                    const avatarStyles = ['avataaars', 'bottts', 'gridy', 'micah'];
+                    const style = avatarStyles[Math.floor(Math.random() * avatarStyles.length)];
+                    const seed = encodeURIComponent(this.characterName || Math.random().toString());
+                    this.portraitUrl = `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}`;
+                    this.saveDetails();
+                }
+            },
+
+            getCharacterIdentity() {
+                const parts = [];
+                if (this.characterSpecies) parts.push(this.characterSpecies);
+                if (this.characterClass) parts.push(this.characterClass);
+                if (this.characterBackground) parts.push(`(${this.characterBackground})`);
+                return parts.join(' ') || 'Character';
+            },
+
+            truncateText(text, maxLength) {
+                if (!text) return '';
+                return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+            }
+        }
+    }
+</script>
+{% endblock %}
+
+{% block help_content %}
+<div class="space-y-3">
+    <h4 class="font-semibold text-dnd-secondary">Character Details</h4>
+    <p>This is where your character comes alive! Add personality and backstory to make them unique.</p>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Essential Details:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Name:</strong> What do people call your character?</li>
+            <li>• <strong>Appearance:</strong> How do they look and dress?</li>
+            <li>• <strong>Personality:</strong> How do they act and think?</li>
+        </ul>
+    </div>
+
+    <div class="space-y-2">
+        <h5 class="font-medium text-dnd-text">Personality Framework:</h5>
+        <ul class="text-xs space-y-1">
+            <li>• <strong>Traits:</strong> Quirks and mannerisms</li>
+            <li>• <strong>Ideals:</strong> What they believe in</li>
+            <li>• <strong>Bonds:</strong> Who/what they care about</li>
+            <li>• <strong>Flaws:</strong> Weaknesses and vices</li>
+        </ul>
+    </div>
+
+    <p class="text-xs text-dnd-muted">Don't worry about perfection - your character will grow and develop through play!</p>
+</div>
+{% endblock %}

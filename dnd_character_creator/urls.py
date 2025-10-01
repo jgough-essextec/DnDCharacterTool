@@ -15,14 +15,14 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
 
-    # API routes
-    path('api/', include('core.urls')),
+    # API routes - temporarily disabled
+    # path('api/', include('core.urls')),
 
     # Frontend routes
     path('characters/', include('characters.urls')),
 
-    # Authentication
-    path('auth/', include('users.urls')),
+    # Authentication - temporarily disabled
+    # path('auth/', include('users.urls')),
 
     # Home redirect
     path('', home_redirect, name='home'),
