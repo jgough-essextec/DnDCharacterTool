@@ -36,3 +36,7 @@ CACHES = {
 
 # More lenient CORS for development
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Login URL for @login_required decorator
+LOGIN_URL = '/admin/login/'
+LOGIN_REDIRECT_URL = '/characters/'

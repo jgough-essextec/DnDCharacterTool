@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Fighter",
+    "description": "Masters of martial combat, skilled with a variety of weapons and armor.",
+    "hit_die": 10,
+    "primary_ability": "str",
+    "saving_throws": ["str", "con"],
+    "armor_proficiencies": ["Light armor", "Medium armor", "Heavy armor", "Shields"],
+    "weapon_proficiencies": ["Simple weapons", "Martial weapons"],
+    "tool_proficiencies": [],
+    "skill_proficiencies": {
+      "choose_count": 2,
+      "available_skills": ["Acrobatics", "Animal Handling", "Athletics", "History", "Insight", "Intimidation", "Perception", "Survival"]
+    },
+    "starting_equipment": {},
+    "class_features": [],
+    "subclasses": [],
+    "spellcasting_ability": null,
+    "caster_progression": null,
+    "source": "PHB"
+  },
+  {
+    "name": "Wizard",
+    "description": "Scholarly magic-users capable of manipulating the structures of reality.",
+    "hit_die": 6,
+    "primary_ability": "int",
+    "saving_throws": ["int", "wis"],
+    "armor_proficiencies": [],
+    "weapon_proficiencies": ["Daggers", "Darts", "Slings", "Quarterstaffs", "Light crossbows"],
+    "tool_proficiencies": [],
+    "skill_proficiencies": {
+      "choose_count": 2,
+      "available_skills": ["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"]
+    },
+    "starting_equipment": {},
+    "class_features": [],
+    "subclasses": [],
+    "spellcasting_ability": "int",
+    "caster_progression": "full",
+    "source": "PHB"
+  },
+  {
+    "name": "Rogue",
+    "description": "Scoundrels who use stealth and trickery to get the upper hand in any situation.",
+    "hit_die": 8,
+    "primary_ability": "dex",
+    "saving_throws": ["dex", "int"],
+    "armor_proficiencies": ["Light armor"],
+    "weapon_proficiencies": ["Simple weapons", "Hand crossbows", "Longswords", "Rapiers", "Shortswords"],
+    "tool_proficiencies": ["Thieves' tools"],
+    "skill_proficiencies": {
+      "choose_count": 4,
+      "available_skills": ["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"]
+    },
+    "starting_equipment": {},
+    "class_features": [],
+    "subclasses": [],
+    "spellcasting_ability": null,
+    "caster_progression": null,
+    "source": "PHB"
+  },
+  {
+    "name": "Cleric",
+    "description": "Priestly champions who wield divine magic in service of a higher power.",
+    "hit_die": 8,
+    "primary_ability": "wis",
+    "saving_throws": ["wis", "cha"],
+    "armor_proficiencies": ["Light armor", "Medium armor", "Shields"],
+    "weapon_proficiencies": ["Simple weapons"],
+    "tool_proficiencies": [],
+    "skill_proficiencies": {
+      "choose_count": 2,
+      "available_skills": ["History", "Insight", "Medicine", "Persuasion", "Religion"]
+    },
+    "starting_equipment": {},
+    "class_features": [],
+    "subclasses": [],
+    "spellcasting_ability": "wis",
+    "caster_progression": "full",
+    "source": "PHB"
+  },
+  {
+    "name": "Ranger",
+    "description": "Warriors of the wilderness, skilled in tracking, survival, and combat.",
+    "hit_die": 10,
+    "primary_ability": "dex",
+    "saving_throws": ["str", "dex"],
+    "armor_proficiencies": ["Light armor", "Medium armor", "Shields"],
+    "weapon_proficiencies": ["Simple weapons", "Martial weapons"],
+    "tool_proficiencies": [],
+    "skill_proficiencies": {
+      "choose_count": 3,
+      "available_skills": ["Animal Handling", "Athletics", "Insight", "Investigation", "Nature", "Perception", "Stealth", "Survival"]
+    },
+    "starting_equipment": {},
+    "class_features": [],
+    "subclasses": [],
+    "spellcasting_ability": "wis",
+    "caster_progression": "half",
+    "source": "PHB"
+  }
+]

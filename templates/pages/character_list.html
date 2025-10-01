@@ -62,8 +62,8 @@
                 </select>
 
                 <select x-model="sortBy" @change="performSearch" class="dnd-select">
-                    <option value="-updated_at">Recently Updated</option>
-                    <option value="-created_at">Recently Created</option>
+                    <option value="-last_modified_date">Recently Updated</option>
+                    <option value="-created_date">Recently Created</option>
                     <option value="character_name">Name A-Z</option>
                     <option value="-level">Level High-Low</option>
                 </select>
@@ -191,7 +191,7 @@
 
                         <!-- Last Modified -->
                         <div class="text-xs text-dnd-muted border-t border-dnd pt-3">
-                            Last modified {{ character.updated_at|timesince }} ago
+                            Last modified {{ character.last_modified_date|timesince }} ago
                         </div>
 
                         <!-- Action Buttons -->
@@ -289,7 +289,7 @@
         return {
             searchQuery: '{{ search_query }}',
             statusFilter: '{{ status_filter }}',
-            sortBy: '-updated_at',
+            sortBy: '-last_modified_date',
             showImportModal: false,
 
             performSearch() {

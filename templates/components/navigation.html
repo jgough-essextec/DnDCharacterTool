@@ -26,12 +26,14 @@
                               {% if request.resolver_match.url_name == 'character_create' %}bg-dnd-primary bg-opacity-20 text-dnd-secondary{% endif %}">
                         Create New
                     </a>
-                    <a href="/browse/"
-                       class="text-dnd-text hover:text-dnd-secondary transition-colors px-3 py-2 rounded-md">
+                    <a href="{% url 'browse_content' %}"
+                       class="text-dnd-text hover:text-dnd-secondary transition-colors px-3 py-2 rounded-md
+                              {% if request.resolver_match.url_name == 'browse_content' %}bg-dnd-primary bg-opacity-20 text-dnd-secondary{% endif %}">
                         Browse Content
                     </a>
-                    <a href="/tools/"
-                       class="text-dnd-text hover:text-dnd-secondary transition-colors px-3 py-2 rounded-md">
+                    <a href="{% url 'tools' %}"
+                       class="text-dnd-text hover:text-dnd-secondary transition-colors px-3 py-2 rounded-md
+                              {% if request.resolver_match.url_name == 'tools' %}bg-dnd-primary bg-opacity-20 text-dnd-secondary{% endif %}">
                         Tools
                     </a>
                 </div>
@@ -88,20 +90,20 @@
                             </div>
 
                             <div class="py-1">
-                                <a href="{% url 'user_profile' %}"
+                                <a href="/admin/"
                                    class="block px-4 py-2 text-sm text-dnd-text hover:bg-dnd-background hover:text-dnd-secondary transition-colors">
-                                    Profile Settings
+                                    Admin Panel
                                 </a>
-                                <a href="/my-campaigns/"
+                                <a href="#"
                                    class="block px-4 py-2 text-sm text-dnd-text hover:bg-dnd-background hover:text-dnd-secondary transition-colors">
                                     My Campaigns
                                 </a>
-                                <a href="/preferences/"
+                                <a href="#"
                                    class="block px-4 py-2 text-sm text-dnd-text hover:bg-dnd-background hover:text-dnd-secondary transition-colors">
                                     Preferences
                                 </a>
                                 <hr class="my-1 border-dnd">
-                                <form method="post" action="{% url 'logout' %}">
+                                <form method="post" action="/admin/logout/">
                                     {% csrf_token %}
                                     <button type="submit"
                                             class="block w-full text-left px-4 py-2 text-sm text-dnd-text hover:bg-dnd-background hover:text-red-400 transition-colors">
@@ -114,10 +116,10 @@
                 {% else %}
                     <!-- Guest User Actions -->
                     <div class="hidden md:flex items-center space-x-3">
-                        <a href="{% url 'login' %}" class="dnd-button-outline">
+                        <a href="/admin/login/" class="dnd-button-outline">
                             Sign In
                         </a>
-                        <a href="{% url 'user_register' %}" class="dnd-button-primary">
+                        <a href="/admin/" class="dnd-button-primary">
                             Get Started
                         </a>
                     </div>
@@ -157,22 +159,24 @@
                           {% if request.resolver_match.url_name == 'character_create' %}bg-dnd-primary bg-opacity-20 text-dnd-secondary{% endif %}">
                     Create New
                 </a>
-                <a href="/browse/"
-                   class="block px-3 py-2 text-dnd-text hover:text-dnd-secondary hover:bg-dnd-background rounded-md transition-colors">
+                <a href="{% url 'browse_content' %}"
+                   class="block px-3 py-2 text-dnd-text hover:text-dnd-secondary hover:bg-dnd-background rounded-md transition-colors
+                          {% if request.resolver_match.url_name == 'browse_content' %}bg-dnd-primary bg-opacity-20 text-dnd-secondary{% endif %}">
                     Browse Content
                 </a>
-                <a href="/tools/"
-                   class="block px-3 py-2 text-dnd-text hover:text-dnd-secondary hover:bg-dnd-background rounded-md transition-colors">
+                <a href="{% url 'tools' %}"
+                   class="block px-3 py-2 text-dnd-text hover:text-dnd-secondary hover:bg-dnd-background rounded-md transition-colors
+                          {% if request.resolver_match.url_name == 'tools' %}bg-dnd-primary bg-opacity-20 text-dnd-secondary{% endif %}">
                     Tools
                 </a>
 
                 {% if not user.is_authenticated %}
                     <hr class="my-2 border-dnd">
-                    <a href="{% url 'login' %}"
+                    <a href="/admin/login/"
                        class="block px-3 py-2 text-dnd-text hover:text-dnd-secondary hover:bg-dnd-background rounded-md transition-colors">
                         Sign In
                     </a>
-                    <a href="{% url 'user_register' %}"
+                    <a href="/admin/"
                        class="block px-3 py-2 bg-dnd-primary text-white hover:bg-red-700 rounded-md transition-colors">
                         Get Started
                     </a>

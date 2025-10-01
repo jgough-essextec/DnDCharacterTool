@@ -1,0 +1,41 @@
+{
+  "scraped_at": "2025-09-30T21:25:23.211115",
+  "files": {
+    "languages.json": {
+      "count": 16,
+      "size_kb": 2.0546875
+    },
+    "races.json": {
+      "count": 0,
+      "size_kb": 0.001953125
+    },
+    "feats.json": {
+      "count": 0,
+      "size_kb": 0.001953125
+    },
+    "classes.json": {
+      "count": 0,
+      "size_kb": 0.001953125
+    },
+    "backgrounds.json": {
+      "count": 0,
+      "size_kb": 0.001953125
+    },
+    "_summary.json": {
+      "count": 1,
+      "size_kb": 0.66015625
+    },
+    "skills.json": {
+      "count": 18,
+      "size_kb": 2.1669921875
+    },
+    "spells.json": {
+      "count": 0,
+      "size_kb": 0.001953125
+    },
+    "equipment.json": {
+      "count": 0,
+      "size_kb": 0.001953125
+    }
+  }
+}

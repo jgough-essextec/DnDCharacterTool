@@ -5,11 +5,19 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 
 def home_redirect(request):
     """Redirect home to character list"""
     return redirect('character_list')
+
+def browse_content(request):
+    """Browse D&D content - placeholder"""
+    return render(request, 'pages/browse_content.html')
+
+def tools_page(request):
+    """D&D tools - placeholder"""
+    return render(request, 'pages/tools.html')
 
 urlpatterns = [
     # Admin
@@ -20,6 +28,10 @@ urlpatterns = [
 
     # Frontend routes
     path('characters/', include('characters.urls')),
+
+    # Content browsing and tools
+    path('browse/', browse_content, name='browse_content'),
+    path('tools/', tools_page, name='tools'),
 
     # Authentication - temporarily disabled
     # path('auth/', include('users.urls')),

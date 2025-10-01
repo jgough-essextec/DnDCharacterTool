@@ -1,0 +1,92 @@
+[
+  {
+    "name": "Acrobatics",
+    "ability": "dex",
+    "description": "Stay on your feet in tricky situations"
+  },
+  {
+    "name": "Animal Handling",
+    "ability": "wis",
+    "description": "Calm or train animals"
+  },
+  {
+    "name": "Arcana",
+    "ability": "int",
+    "description": "Recall lore about spells, magic items, and the planes"
+  },
+  {
+    "name": "Athletics",
+    "ability": "str",
+    "description": "Climb, jump, swim, or perform other physical activities"
+  },
+  {
+    "name": "Deception",
+    "ability": "cha",
+    "description": "Convincingly hide the truth"
+  },
+  {
+    "name": "History",
+    "ability": "int",
+    "description": "Recall lore about historical events"
+  },
+  {
+    "name": "Insight",
+    "ability": "wis",
+    "description": "Determine the true intentions of a creature"
+  },
+  {
+    "name": "Intimidation",
+    "ability": "cha",
+    "description": "Influence others through threats"
+  },
+  {
+    "name": "Investigation",
+    "ability": "int",
+    "description": "Look around for clues and deduce conclusions"
+  },
+  {
+    "name": "Medicine",
+    "ability": "wis",
+    "description": "Diagnose illnesses and stabilize dying creatures"
+  },
+  {
+    "name": "Nature",
+    "ability": "int",
+    "description": "Recall lore about terrain, plants, animals, and weather"
+  },
+  {
+    "name": "Perception",
+    "ability": "wis",
+    "description": "Spot, hear, or otherwise detect the presence of something"
+  },
+  {
+    "name": "Performance",
+    "ability": "cha",
+    "description": "Delight an audience with music, dance, or other entertainment"
+  },
+  {
+    "name": "Persuasion",
+    "ability": "cha",
+    "description": "Influence others through charm or reason"
+  },
+  {
+    "name": "Religion",
+    "ability": "int",
+    "description": "Recall lore about deities and religious practices"
+  },
+  {
+    "name": "Sleight of Hand",
+    "ability": "dex",
+    "description": "Pick pockets, conceal objects, or perform tricks"
+  },
+  {
+    "name": "Stealth",
+    "ability": "dex",
+    "description": "Conceal yourself from enemies or sneak past them"
+  },
+  {
+    "name": "Survival",
+    "ability": "wis",
+    "description": "Track creatures, navigate wilderness, or find food"
+  }
+]

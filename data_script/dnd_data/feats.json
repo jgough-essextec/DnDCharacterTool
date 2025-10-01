@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Alert",
+    "description": "Always on the lookout for danger, you gain the following benefits:",
+    "prerequisites": [],
+    "ability_score_increase": [],
+    "repeatable": false,
+    "category": "general",
+    "source": "PHB"
+  },
+  {
+    "name": "Athlete",
+    "description": "You have undergone extensive physical training to gain the following benefits:",
+    "prerequisites": [],
+    "ability_score_increase": ["str", "dex"],
+    "repeatable": false,
+    "category": "general",
+    "source": "PHB"
+  },
+  {
+    "name": "Lucky",
+    "description": "You have inexplicable luck that seems to kick in at just the right moment.",
+    "prerequisites": [],
+    "ability_score_increase": [],
+    "repeatable": false,
+    "category": "general",
+    "source": "PHB"
+  },
+  {
+    "name": "Magic Initiate",
+    "description": "Choose a class: bard, cleric, druid, sorcerer, warlock, or wizard. You learn two cantrips of your choice from that class's spell list.",
+    "prerequisites": [],
+    "ability_score_increase": [],
+    "repeatable": true,
+    "category": "general",
+    "source": "PHB"
+  }
+]

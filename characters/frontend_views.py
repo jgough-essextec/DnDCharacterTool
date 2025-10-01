@@ -29,11 +29,15 @@ class CharacterListView(ListView):
     paginate_by = 12
 
     def get_queryset(self):
+        # Handle anonymous users
+        if not self.request.user.is_authenticated:
+            return Character.objects.none()
+
         queryset = Character.objects.filter(
             user=self.request.user
         ).select_related(
             'dnd_class', 'species', 'background', 'abilities'
-        ).order_by('-updated_at', '-created_at')
+        ).order_by('-last_modified_date', '-created_date')
 
         # Search functionality
         search = self.request.GET.get('search')
@@ -68,10 +72,14 @@ def character_create_wizard(request, character_id=None):
     if character_id:
         character = get_object_or_404(Character, id=character_id, user=request.user)
     else:
-        # Create a new draft character
+        # Create a new draft character with unique name
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        character_name = f"New Character {timestamp}"
+
         character = Character.objects.create(
             user=request.user,
-            character_name="New Character",
+            character_name=character_name,
             level=1,
             is_complete=False
         )
