@@ -179,9 +179,7 @@ class CharacterCalculationService:
         if not hasattr(character, 'abilities'):
             return 0
 
-        ability_modifier = cls.calculate_ability_modifier(
-            getattr(character.abilities, f"{ability_name.lower()}_score")
-        )
+        ability_modifier = character.abilities.get_modifier_for_ability(ability_name)
 
         # Check if proficient in this saving throw
         is_proficient = character.saving_throws.filter(
@@ -262,9 +260,7 @@ class CharacterCalculationService:
 
         # Get spellcasting ability based on class
         spellcasting_ability = character.dnd_class.primary_ability
-        ability_modifier = cls.calculate_ability_modifier(
-            getattr(character.abilities, f"{spellcasting_ability.lower()}_score")
-        )
+        ability_modifier = character.abilities.get_modifier_for_ability(spellcasting_ability)
 
         return 8 + proficiency_bonus + ability_modifier
 
@@ -281,9 +277,7 @@ class CharacterCalculationService:
 
         # Get spellcasting ability based on class
         spellcasting_ability = character.dnd_class.primary_ability
-        ability_modifier = cls.calculate_ability_modifier(
-            getattr(character.abilities, f"{spellcasting_ability.lower()}_score")
-        )
+        ability_modifier = character.abilities.get_modifier_for_ability(spellcasting_ability)
 
         return proficiency_bonus + ability_modifier
 

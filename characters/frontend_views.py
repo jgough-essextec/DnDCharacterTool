@@ -318,6 +318,14 @@ def get_step_context(character, step):
         context['classes'] = DnDClass.objects.all().order_by('name')
         context['selected_class'] = character.dnd_class
 
+        # Add skills data for skill selection interface
+        from game_content.models import Skill
+        context['skills'] = list(Skill.objects.all().values('name', 'associated_ability', 'description'))
+
+        # Add existing skill selections for this character
+        existing_skills = list(character.skills.values_list('skill__name', flat=True))
+        context['selected_skills'] = existing_skills
+
         # Get class recommendations if user is new
         if not character.dnd_class and character.user.characters.count() == 1:
             # This is their first character, show recommendations
@@ -398,6 +406,30 @@ def handle_step_submission(request, character, step):
                 messages.success(request, f'Class "{dnd_class.name}" selected!')
             except DnDClass.DoesNotExist:
                 messages.error(request, 'Invalid class selected.')
+
+        # Handle skill selection
+        selected_skills = request.POST.getlist('selected_skills[]')
+        if selected_skills and character.dnd_class:
+            # Clear existing character skills for this class
+            character.skills.all().delete()
+
+            # Add selected skills
+            from game_content.models import Skill
+            for skill_name in selected_skills:
+                try:
+                    skill = Skill.objects.get(name=skill_name)
+                    from characters.models import CharacterSkill
+                    CharacterSkill.objects.create(
+                        character=character,
+                        skill=skill,
+                        proficiency_type='proficient'
+                    )
+                except Skill.DoesNotExist:
+                    messages.error(request, f'Invalid skill selected: {skill_name}')
+                    continue
+
+            if len(selected_skills) > 0:
+                messages.success(request, f'{len(selected_skills)} skill(s) selected!')
 
     elif step == 2:
         # Handle origin selection

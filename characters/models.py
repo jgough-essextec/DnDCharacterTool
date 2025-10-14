@@ -69,6 +69,44 @@ class Character(models.Model):
         self.proficiency_bonus = self.calculate_proficiency_bonus()
         super().save(*args, **kwargs)
 
+    def get_calculation_service(self):
+        """Get calculation service instance for this character"""
+        from .services import CharacterCalculationService
+        return CharacterCalculationService(self)
+
+    def get_validation_service(self):
+        """Get validation service instance for this character"""
+        from .services import CharacterValidationService
+        return CharacterValidationService(self)
+
+    def calculate_max_hp(self):
+        """Calculate maximum HP using calculation service"""
+        return self.get_calculation_service().calculate_max_hp()
+
+    def calculate_ac(self):
+        """Calculate armor class using calculation service"""
+        return self.get_calculation_service().calculate_armor_class()
+
+    def get_all_stats(self):
+        """Get complete calculated statistics"""
+        return self.get_calculation_service().get_complete_character_stats()
+
+    def validate_build(self):
+        """Validate character build for rule compliance"""
+        return self.get_validation_service().validate_character()
+
+    def auto_calculate_stats(self):
+        """Auto-calculate and update derived stats"""
+        calc_service = self.get_calculation_service()
+
+        # Update calculated values
+        self.max_hp = calc_service.calculate_max_hp()
+        self.armor_class = calc_service.calculate_armor_class()
+        self.initiative = calc_service.calculate_initiative()
+
+        # Save without triggering recursion
+        super().save(update_fields=['max_hp', 'armor_class', 'initiative'])
+
 
 class CharacterAbilities(models.Model):
     """Character's six ability scores"""

@@ -60,7 +60,7 @@
             <button type="button"
                     class="dnd-button-outline {% if current_step == 1 %}opacity-50 cursor-not-allowed{% endif %}"
                     {% if current_step > 1 %}
-                        hx-get="{% url 'character_create_step' step=current_step|add:-1 %}"
+                        hx-get="{% url 'character_create_step' character.id current_step|add:-1 %}"
                         hx-target="#step-content"
                         hx-push-url="true"
                     {% else %}
@@ -107,7 +107,7 @@
         const formData = new FormData(document.querySelector('#character-form'));
 
         // Save via API
-        fetch("{% url 'character_save_draft' %}", {
+        fetch("{% url 'character_save_draft' character.id %}", {
             method: 'POST',
             body: formData,
             headers: {

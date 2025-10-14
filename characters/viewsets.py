@@ -11,8 +11,13 @@ from .models import Character
 from .serializers import (
     CharacterListSerializer,
     CharacterDetailSerializer,
-    CharacterCreateSerializer
+    CharacterCreateSerializer,
+    CharacterAbilitiesUpdateSerializer,
+    CharacterDetailsUpdateSerializer
 )
+from .services.calculation_service import CharacterCalculationService
+from .services.dice_service import DiceRollerService
+from .services import CharacterValidationService
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -108,19 +113,19 @@ class CharacterViewSet(viewsets.ModelViewSet):
 
         # Use the detail serializer but could create a specialized one later
         serializer = CharacterDetailSerializer(character, context={'request': request})
+
+        # Get comprehensive calculated stats
+        try:
+            calculated_stats = CharacterCalculationService.calculate_all_stats(character)
+        except Exception as e:
+            calculated_stats = {
+                'error': f'Failed to calculate stats: {str(e)}',
+                'proficiency_bonus': character.calculate_proficiency_bonus()
+            }
+
         return Response({
             'character': serializer.data,
-            'calculated_stats': {
-                'proficiency_bonus': character.calculate_proficiency_bonus(),
-                'ability_modifiers': {
-                    'strength': character.abilities.strength_modifier if hasattr(character, 'abilities') else 0,
-                    'dexterity': character.abilities.dexterity_modifier if hasattr(character, 'abilities') else 0,
-                    'constitution': character.abilities.constitution_modifier if hasattr(character, 'abilities') else 0,
-                    'intelligence': character.abilities.intelligence_modifier if hasattr(character, 'abilities') else 0,
-                    'wisdom': character.abilities.wisdom_modifier if hasattr(character, 'abilities') else 0,
-                    'charisma': character.abilities.charisma_modifier if hasattr(character, 'abilities') else 0,
-                }
-            }
+            'calculated_stats': calculated_stats
         })
 
     # Step-specific update endpoints
@@ -186,3 +191,88 @@ class CharacterViewSet(viewsets.ModelViewSet):
 
         serializer = CharacterDetailSerializer(character, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def calculate_stats(self, request, pk=None):
+        """
+        GET /api/characters/{id}/calculate_stats/
+
+        Returns all calculated statistics for the character including:
+        - Ability modifiers
+        - Combat stats (HP, AC, Initiative)
+        - Skill bonuses
+        - Saving throw bonuses
+        - Spell statistics
+        - Carrying capacity
+        """
+        character = self.get_object()
+
+        try:
+            stats = CharacterCalculationService.calculate_all_stats(character)
+            return Response(stats)
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to calculate stats: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=True, methods=['get'])
+    def validate(self, request, pk=None):
+        """
+        GET /api/characters/{id}/validate/
+
+        Validates the character build against D&D rules.
+        Returns any validation errors or success message.
+        """
+        character = self.get_object()
+
+        try:
+            validation_service = CharacterValidationService(character)
+            errors = validation_service.validate_character()
+
+            if errors:
+                return Response({
+                    'valid': False,
+                    'errors': errors
+                })
+            else:
+                return Response({
+                    'valid': True,
+                    'message': 'Character build is valid!'
+                })
+
+        except Exception as e:
+            return Response(
+                {'error': f'Validation failed: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=False, methods=['post'])
+    def roll_ability_scores(self, request):
+        """
+        POST /api/characters/roll_ability_scores/
+
+        Roll new ability scores using 4d6 drop lowest method.
+        Returns: {"strength": 14, "dexterity": 16, ...}
+        """
+        try:
+            ability_rolls = DiceRollerService.roll_standard_ability_scores()
+
+            # Convert to simple scores
+            scores = {}
+            for ability, roll_result in ability_rolls.items():
+                scores[ability] = roll_result.total
+
+            return Response({
+                'scores': scores,
+                'details': {ability: {
+                    'rolls': roll_result.individual_rolls,
+                    'total': roll_result.total
+                } for ability, roll_result in ability_rolls.items()}
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to roll ability scores: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )

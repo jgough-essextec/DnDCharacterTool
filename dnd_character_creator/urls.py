@@ -23,8 +23,8 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
 
-    # API routes - temporarily disabled
-    # path('api/', include('core.urls')),
+    # API routes
+    path('api/', include('core.urls')),
 
     # Frontend routes
     path('characters/', include('characters.urls')),

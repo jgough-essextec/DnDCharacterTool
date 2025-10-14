@@ -128,7 +128,8 @@ class CharacterCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating a new character"""
     class Meta:
         model = Character
-        fields = ['character_name']
+        fields = ['id', 'character_name']
+        read_only_fields = ['id']
 
     def create(self, validated_data):
         """Create a new character with default values"""

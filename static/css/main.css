@@ -198,7 +198,28 @@ body {
 .dice-d8 { background-color: var(--dice-d8); }
 .dice-d10 { background-color: var(--dice-d10); }
 .dice-d12 { background-color: var(--dice-d12); }
-.dice-d20 { background-color: var(--dice-d20); color: #1a1a1a; }
+.dice-d20 { background-color: var(--dice-d20); }
+
+/* Skill Selection */
+.skill-option {
+  @apply dnd-card p-4 cursor-pointer transition-all duration-200 hover:border-blue-500;
+}
+
+.skill-option.selected {
+  @apply ring-2 ring-blue-500 bg-blue-900 bg-opacity-20 border-blue-500;
+}
+
+.skill-option.disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.skill-option.disabled:hover {
+  @apply border-gray-700;
+}
+
+.skill-description {
+  @apply opacity-75;
+}
 
 /* Tooltips */
 .tooltip {
