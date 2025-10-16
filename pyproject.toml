@@ -1,0 +1,102 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dnd-character-creator"
+version = "1.0.0"
+description = "A full-stack D&D character creation application"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+keywords = ["django", "dnd", "dungeons-and-dragons", "character-creator", "aws", "zappa"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment :: Role-Playing",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/DnDCharacterTool"
+Repository = "https://github.com/yourusername/DnDCharacterTool"
+Issues = "https://github.com/yourusername/DnDCharacterTool/issues"
+
+[tool.black]
+line-length = 88
+target-version = ['py311', 'py312', 'py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | \.tox
+  | build
+  | dist
+  | migrations
+  | static
+  | media
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_django = ["django"]
+known_rest_framework = ["rest_framework"]
+sections = ["FUTURE", "STDLIB", "DJANGO", "REST_FRAMEWORK", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip = ["venv", ".venv", "migrations"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "dnd_character_creator.settings.test"
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "--reuse-db",
+]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/settings/*",
+    "manage.py",
+    "*/wsgi.py",
+    "*/asgi.py",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
+tests = ["B201", "B301"]
+skips = ["B101", "B601"]
+
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "dnd_character_creator.settings.local"
